@@ -23,7 +23,10 @@ MAIL_MAILER=log
 ENV
 docker build -f Dockerfile.railway -t payment-railway:ci .
 docker compose up -d --wait postgres
-docker run -d --name railway-app --network crypto-usdt-pay_default --env-file .env -p 127.0.0.1:8080:8080 payment-railway:ci
+# Simulate Railway restoring an incompatible base-image module at runtime.
+# Only this disposable CI container starts as root; the application runs as www-data.
+docker run -d --name railway-app --user root --network crypto-usdt-pay_default --env-file .env -p 127.0.0.1:8080:8080 payment-railway:ci \
+    sh -c 'ln -sf ../mods-available/mpm_event.load /etc/apache2/mods-enabled/mpm_event.load; exec su -s /bin/sh www-data -c "sh deploy/railway/start.sh"'
 attempt=0
 until curl -fsS http://127.0.0.1:8080/login > /tmp/railway-login; do
     attempt=$((attempt + 1))
@@ -33,13 +36,13 @@ done
 grep -q '/build/assets/' /tmp/railway-login
 # Verify that the supervisor actually runs the minute scheduler, not just Apache.
 attempt=0
-until docker exec railway-app php artisan tinker --execute='exit(Cache::get("payments:last_success") ? 0 : 1);'; do
+until docker exec railway-app php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); exit(Illuminate\Support\Facades\Cache::get("payments:last_success") ? 0 : 1);'; do
     attempt=$((attempt + 1))
     if [ "$attempt" -ge 40 ]; then exit 1; fi
     sleep 2
 done
-docker exec railway-app php artisan tinker --execute='if (DB::table("users")->count() !== 1) { exit(1); } DB::table("app_settings")->update(["min_invoice_amount_minor" => 123456]);'
+docker exec railway-app php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); if (Illuminate\Support\Facades\DB::table("users")->count() !== 1) { exit(1); } Illuminate\Support\Facades\DB::table("app_settings")->update(["min_invoice_amount_minor" => 123456]);'
 docker restart railway-app
 curl --retry 20 --retry-all-errors --retry-delay 1 -fsS http://127.0.0.1:8080/login > /dev/null
-docker exec railway-app php artisan tinker --execute='exit(DB::table("users")->count() === 1 && !DB::table("app_settings")->where("min_invoice_amount_minor", "!=", 123456)->exists() ? 0 : 1);'
+docker exec railway-app php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); exit(Illuminate\Support\Facades\DB::table("users")->count() === 1 && !Illuminate\Support\Facades\DB::table("app_settings")->where("min_invoice_amount_minor", "!=", 123456)->exists() ? 0 : 1);'
 test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/telegram/webhook)" = 403
