@@ -33,13 +33,13 @@ done
 grep -q '/build/assets/' /tmp/railway-login
 # Verify that the supervisor actually runs the minute scheduler, not just Apache.
 attempt=0
-until docker exec railway-app php artisan tinker --execute='if (!Cache::get("payments:last_success")) { throw new RuntimeException("Scheduler has not run"); }'; do
+until docker exec railway-app php artisan tinker --execute='exit(Cache::get("payments:last_success") ? 0 : 1);'; do
     attempt=$((attempt + 1))
     if [ "$attempt" -ge 40 ]; then exit 1; fi
     sleep 2
 done
-docker exec railway-app php artisan tinker --execute='if (DB::table("users")->count() !== 1) { throw new RuntimeException("Bootstrap failed"); } DB::table("app_settings")->update(["min_invoice_amount_minor" => 123456]);'
+docker exec railway-app php artisan tinker --execute='if (DB::table("users")->count() !== 1) { exit(1); } DB::table("app_settings")->update(["min_invoice_amount_minor" => 123456]);'
 docker restart railway-app
-curl --retry 20 --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8080/login > /dev/null
-docker exec railway-app php artisan tinker --execute='if (DB::table("users")->count() !== 1 || DB::table("app_settings")->where("min_invoice_amount_minor", "!=", 123456)->exists()) { throw new RuntimeException("Restart changed existing data"); }'
+curl --retry 20 --retry-all-errors --retry-delay 1 -fsS http://127.0.0.1:8080/login > /dev/null
+docker exec railway-app php artisan tinker --execute='exit(DB::table("users")->count() === 1 && !DB::table("app_settings")->where("min_invoice_amount_minor", "!=", 123456)->exists() ? 0 : 1);'
 test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/telegram/webhook)" = 403

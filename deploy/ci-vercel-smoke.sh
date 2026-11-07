@@ -44,5 +44,5 @@ test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/internal/pa
 curl -fsS -H 'Authorization: Bearer ci-disposable-maintenance-secret-0123456789' http://127.0.0.1:8080/internal/payments/tick
 curl -fsS -H 'Authorization: Bearer ci-disposable-maintenance-secret-0123456789' http://127.0.0.1:8080/internal/queue/tick
 docker restart vercel-app
-curl --retry 10 --retry-connrefused --retry-delay 1 -fsS -b /tmp/ci-cookies http://127.0.0.1:8080/dashboard > /tmp/ci-dashboard-restarted.html
+curl --retry 10 --retry-all-errors --retry-delay 1 -fsS -b /tmp/ci-cookies http://127.0.0.1:8080/dashboard > /tmp/ci-dashboard-restarted.html
 grep -q 'Dashboard' /tmp/ci-dashboard-restarted.html
