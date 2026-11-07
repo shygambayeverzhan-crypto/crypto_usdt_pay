@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+
+@plugin "daisyui" {
+    themes: dark --default, light;
+}
+
+/* Тень сайдбара вправо: светлая тема — чуть плотнее, тёмная — мягче */
+.sidebar-elevated {
+    box-shadow: 2px 0 10px -3px rgb(0 0 0 / 0.08);
+}
+[data-theme='dark'] .sidebar-elevated {
+    box-shadow: 2px 0 10px -3px rgb(0 0 0 / 0.08);
+}
+[data-theme='light'] .sidebar-elevated {
+    box-shadow: 3px 0 14px -3px rgb(0 0 0 / 0.13);
+}
+
+/*
+ * DaisyUI: :where(.drawer-side) всегда даёт overflow-x: hidden, при lg:drawer-open — overflow-y: auto,
+ * из‑за этого box-shadow у aside полностью обрезается. На десктопе снимаем overflow с колонки
+ * и переносим вертикальный скролл на сам aside (h-dvh overflow-y-auto в AppLayout).
+ */
+@media (width >= 1024px) {
+    .drawer.lg\:drawer-open > .drawer-side {
+        overflow: visible;
+    }
+}
+
+/* Базовый канвас под всем приложением: тёмный, чтобы при прокрутке/оверскролле не было белых «прыжков» */
+@layer base {
+    html {
+        background-color: #030712;
+    }
+
+    body {
+        background-color: #030712;
+        min-height: 100%;
+    }
+
+    /* Только лендинг Welcome: без горизонтального overflow */
+    html.page-welcome {
+        overflow-x: hidden;
+    }
+}
