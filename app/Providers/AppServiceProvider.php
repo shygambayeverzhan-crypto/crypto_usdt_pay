@@ -51,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(\App\Services\Blockchain\RequestBudget::class);
         $this->app->bind(AddressServiceContract::class, AddressService::class);
         $this->app->bind(InvoiceServiceContract::class, InvoiceService::class);
         $this->app->bind(InvoiceCallbackServiceContract::class, InvoiceCallbackService::class);

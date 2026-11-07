@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import ModalDialog from '@/components/ui/modal/ModalDialog.vue';
 import FormControl from '@/components/form/FormControl.vue';
 import Label from '@/components/form/Label.vue';
@@ -19,6 +20,7 @@ export interface MerchantForm {
 }
 
 type MerchantFormErrors = Partial<Record<keyof MerchantForm, string>>;
+const logoUploadsEnabled = computed(() => usePage().props.merchantLogoUploadsEnabled !== false);
 
 interface Props {
     modelValue: boolean;
@@ -158,7 +160,7 @@ function submit() {
                 />
             </FormControl>
 
-            <FormControl :error="fieldErrors.logo">
+            <FormControl v-if="logoUploadsEnabled" :error="fieldErrors.logo">
                 <div class="flex items-center justify-between gap-2">
                     <Label for="merchant-logo">{{ __('frontend.merchants.fields.logo') }}</Label>
                     <span class="text-xs opacity-70">{{ __('frontend.merchants.fields.logo_hint') }}</span>

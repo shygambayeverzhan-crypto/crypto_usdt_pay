@@ -19,6 +19,8 @@ class BlockchainService implements BlockchainServiceContract
 {
     private array $history = [];
 
+    public function __construct(private RequestBudget $budget) {}
+
     // Все URL/контракты берутся из конфигурации services.trongrid.* с
     // автопереключением Mainnet/Nile через ENV (см. config/services.php)
 
@@ -75,7 +77,7 @@ class BlockchainService implements BlockchainServiceContract
         $money = app(MoneyServiceContract::class);
         $seen = [];
         for ($page = 0; $page < 100; $page++) {
-            $response = Http::withHeaders($this->buildHeaders())->connectTimeout(5)->timeout(15)
+            $response = Http::withHeaders($this->buildHeaders())->connectTimeout(5)->timeout($this->budget->timeout())
                 ->withoutRedirecting()->get($url, $query);
             $response->throw();
             $payload = $response->json();
@@ -154,7 +156,7 @@ class BlockchainService implements BlockchainServiceContract
 
     private function rpc(string $path, array $body): array
     {
-        $response = Http::withHeaders($this->buildHeaders())->connectTimeout(5)->timeout(15)
+        $response = Http::withHeaders($this->buildHeaders())->connectTimeout(5)->timeout($this->budget->timeout())
             ->withoutRedirecting()->post($this->getBaseUrl().$path, $body);
         $response->throw();
         $data = $response->json();

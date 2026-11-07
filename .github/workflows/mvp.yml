@@ -47,3 +47,14 @@ jobs:
         run: docker compose logs --tail=100
       - if: always()
         run: docker compose down -v
+  vercel-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh deploy/ci-vercel-smoke.sh
+      - if: failure()
+        run: docker logs vercel-app
+      - if: always()
+        run: |
+          docker rm -f vercel-app || true
+          docker compose down -v

@@ -77,6 +77,13 @@ class InvoiceService implements InvoiceServiceContract
                     return $existing;
                 }
             }
+            if (config('vercel.enabled')) {
+                $lastSuccess = \Illuminate\Support\Facades\Cache::get('payments:last_success');
+                if (! config('vercel.payments_enabled') || ! $lastSuccess
+                    || \Illuminate\Support\Carbon::parse($lastSuccess)->lt(now()->subMinutes(5))) {
+                    $this->invalid('Приём платежей приостановлен: проверка сети ещё не настроена или временно недоступна.');
+                }
+            }
             $quote = BigInteger::of($minor);
             $used = DB::table('invoices')->where('address_id', $address->id)->pluck('amount')->flip();
             for ($offset = 0; $offset <= 9999; $offset++, $quote = $quote->plus(1)) {

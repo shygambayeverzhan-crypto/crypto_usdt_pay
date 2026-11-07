@@ -265,3 +265,97 @@ it('keeps notification retries separate from the paid state', function () {
     expect($invoice->fresh()->status)->toBe(InvoiceStatus::PAID);
     expect($invoice->fresh()->customer_notified_at)->toBeNull();
 });
+
+it('rejects missing and incorrect maintenance secrets before touching payments', function () {
+    $invoice = paymentOrder($this);
+    config(['vercel.enabled' => true, 'vercel.cron_secret' => str_repeat('x', 40),
+        'database.connections.pgsql.url' => 'postgresql://fixture/test']);
+    $this->getJson('/internal/payments/tick')->assertUnauthorized();
+    $this->withToken('wrong')->getJson('/internal/payments/tick')->assertUnauthorized();
+    config(['vercel.cron_secret' => '']);
+    $this->withToken('')->getJson('/internal/payments/tick')->assertUnauthorized();
+    Http::assertNothingSent();
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PENDING);
+});
+
+it('runs an authenticated Vercel tick and confirms only through the receipt checks', function () {
+    $invoice = paymentOrder($this);
+    paymentChain($invoice);
+    config(['vercel.enabled' => true, 'vercel.cron_secret' => str_repeat('x', 40),
+        'database.connections.pgsql.url' => 'postgresql://fixture/test']);
+    $this->withToken(str_repeat('x', 40))->getJson('/internal/payments/tick')
+        ->assertOk()->assertJsonPath('status', 'ok')->assertJsonPath('checked', 1);
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PAID);
+    $this->withToken(str_repeat('x', 40))->getJson('/internal/payments/tick')->assertOk();
+    expect(DB::table('payment_audit')->where('event', 'paid')->count())->toBe(1);
+});
+
+it('serializes bounded ticks using the shared lock', function () {
+    paymentOrder($this);
+    $lock = \Illuminate\Support\Facades\Cache::lock('payments:bounded-reconcile', 240);
+    $lock->get();
+    try {
+        expect(app(\App\Services\Invoice\PaymentBatch::class)->run()['status'])->toBe('busy');
+        Http::assertNothingSent();
+    } finally {
+        $lock->release();
+    }
+});
+
+it('rotates bounded batches so older pending invoices do not starve new ones', function () {
+    $a = paymentOrder($this);
+    $b = paymentOrder($this, external: 'order-2');
+    Http::fake(['api.trongrid.io/v1/accounts/*' => Http::response(['success' => true, 'data' => []])]);
+    $batch = app(\App\Services\Invoice\PaymentBatch::class);
+    expect($batch->run(1)['checked'])->toBe(1);
+    expect(Invoice::whereNotNull('last_checked_at')->count())->toBe(1);
+    expect($batch->run(1)['checked'])->toBe(1);
+    expect($a->fresh()->last_checked_at)->not->toBeNull();
+    expect($b->fresh()->last_checked_at)->not->toBeNull();
+});
+
+it('fails closed on provider errors and releases the batch lock for recovery', function () {
+    $invoice = paymentOrder($this);
+    Http::fake(['api.trongrid.io/*' => Http::response([], 429)]);
+    $batch = app(\App\Services\Invoice\PaymentBatch::class);
+    expect($batch->run()['status'])->toBe('error');
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PENDING);
+    expect(\Illuminate\Support\Facades\Cache::get('payments:last_success'))->toBeNull();
+    Http::swap(new \Illuminate\Http\Client\Factory);
+    Http::preventStrayRequests();
+    paymentChain($invoice);
+    expect($batch->run()['status'])->toBe('ok');
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PAID);
+});
+
+it('does not start blockchain I/O after the invocation deadline', function () {
+    $budget = app(\App\Services\Blockchain\RequestBudget::class);
+    $budget->start(-1);
+    try {
+        expect(fn () => app(BlockchainService::class)->getIncomingTransactions(Network::TRON, Currency::USDT,
+            config('payments.receive_address')))->toThrow(\App\Services\Blockchain\BudgetExhausted::class);
+        Http::assertNothingSent();
+    } finally {
+        $budget->clear();
+    }
+});
+
+it('blocks new Vercel invoices until enabled and reconciliation is fresh', function () {
+    config(['vercel.enabled' => true]);
+    expect(fn () => paymentOrder($this))->toThrow(\Illuminate\Validation\ValidationException::class);
+    config(['vercel.payments_enabled' => true]);
+    expect(fn () => paymentOrder($this))->toThrow(\Illuminate\Validation\ValidationException::class);
+    \Illuminate\Support\Facades\Cache::put('payments:last_success', now()->toIso8601String());
+    $invoice = paymentOrder($this);
+    $this->travel(6)->minutes();
+    // Idempotent repeats still return the existing order during an outage.
+    expect(paymentOrder($this)->id)->toBe($invoice->id);
+    expect(fn () => paymentOrder($this, external: 'new-order'))->toThrow(\Illuminate\Validation\ValidationException::class);
+});
+
+it('serves an honest unavailable page when the Vercel database is not configured', function () {
+    config(['vercel.enabled' => true, 'database.connections.pgsql.url' => null,
+        'database.connections.pgsql.host' => '']);
+    $this->get('/login')->assertStatus(503)->assertSee('Панель ещё настраивается');
+    $this->get('/up')->assertOk();
+});
