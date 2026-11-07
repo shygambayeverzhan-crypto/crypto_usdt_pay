@@ -39,6 +39,7 @@ return [
     ],
 
     'trongrid' => [
+        'network' => $trongridNetwork,
         // Автовыбор сети: через TRONGRID_NETWORK=mainnet|nile, иначе по APP_ENV
         // Можно переопределить конкретными переменными TRONGRID_BASE_URL/USDT_CONTRACT
         'base_url' => env(

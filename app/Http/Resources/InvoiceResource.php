@@ -7,8 +7,6 @@ namespace App\Http\Resources;
 use App\Contracts\Blockchain\ExplorerServiceContract;
 use App\Contracts\Money\MoneyServiceContract;
 use App\Models\Invoice;
-use App\Http\Resources\MerchantResource;
-use App\Http\Resources\ClientResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,10 +19,13 @@ class InvoiceResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'telegram_url' => $this->bot_link_token && config('telegram.bots.mybot.username') ? 'https://t.me/'.ltrim(config('telegram.bots.mybot.username'), '@').'?start=pay_'.$this->bot_link_token : null,
             'external_invoice_id' => $this->external_invoice_id,
             'address_id' => $this->address_id,
             'address' => $this->whenLoaded('address', fn () => $this->address?->address),
             'payment_url' => route('invoices.public', $this->resource),
+            'requested_amount' => $this->requested_amount ? app(MoneyServiceContract::class)->format(app(MoneyServiceContract::class)->fromMinor($this->requested_amount, $this->currency)) : null,
+            'chain_network' => $this->chain_network,
             'amount' => app(MoneyServiceContract::class)->format($this->amount),
             'currency' => $this->currency->value,
             'currency_label' => strtoupper($this->currency->value),
@@ -51,5 +52,3 @@ class InvoiceResource extends JsonResource
         ];
     }
 }
-
-

@@ -17,8 +17,7 @@ final class StartCommand extends Command
 
     public function __construct(
         private readonly TelegramServiceContract $telegramService,
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
@@ -27,10 +26,22 @@ final class StartCommand extends Command
         $chat = $message?->getChat();
         $from = $message?->getFrom();
 
-        if (!$chat || $token === '') {
+        if (! $chat || $chat->type !== 'private') {
+            return;
+        }
+        if ($token === '') {
             $this->replyWithMessage([
-                'text' => __('messages.notifications.telegram.start_missing_token'),
+                'text' => "Бот приёма USDT в сети TRON.\nОткройте персональную ссылку заказа от продавца, чтобы получать статус оплаты.\n/status — ваши последние платежи.\nПодтверждение появится после проверки транзакции и подтверждений сети.",
             ]);
+
+            return;
+        }
+
+        if (str_starts_with($token, 'pay_')) {
+            $invoice = app(\App\Services\Telegram\CustomerPaymentLink::class)->bind(substr($token, 4), (string) $chat->id);
+            $this->replyWithMessage(['text' => $invoice
+                ? 'Заказ: '.$invoice->id."\nСтатус: ".$invoice->status->value."\n".route('invoices.public', $invoice)
+                : 'Ссылка недействительна или уже привязана к другому чату.']);
 
             return;
         }
@@ -47,7 +58,7 @@ final class StartCommand extends Command
             ]);
         } catch (\Throwable $throwable) {
             Log::warning('Telegram start command failed', [
-                'error' => $throwable->getMessage(),
+                'exception_class' => $throwable::class,
             ]);
 
             $this->replyWithMessage([
@@ -56,4 +67,3 @@ final class StartCommand extends Command
         }
     }
 }
-

@@ -11,13 +11,15 @@ use Illuminate\Support\Str;
 
 final class WalletTransferService implements WalletTransferServiceContract
 {
-
-
     private const SCRIPT = 'send_usdt_cli.js';
+
     private const TIMEOUT_SECONDS = 120;
 
     public function sendUsdt(string $to, string $amount, ?string $idempotencyKey = null): bool
     {
+        if (! app()->environment(['local', 'testing']) || config('services.trongrid.network') !== 'nile') {
+            throw new \RuntimeException('Sandbox signing is disabled.');
+        }
         $to = trim($to);
         $amount = $this->normalizeAmount($amount);
 
@@ -34,13 +36,14 @@ final class WalletTransferService implements WalletTransferServiceContract
         $network = trim((string) config('setup.sandbox_wallet.network'));
         if ($walletId === '' || $network !== 'nile') {
             Log::error('WalletTransfer: configure SANDBOX_WALLET_ID and use the Nile test network.');
+
             return false;
         }
 
         $workingDirectory = base_path('wallet-signer');
         $scriptPath = $workingDirectory.DIRECTORY_SEPARATOR.self::SCRIPT;
 
-        if (!is_file($scriptPath)) {
+        if (! is_file($scriptPath)) {
             Log::error('WalletTransfer: wallet-signer script not found', [
                 'script' => $scriptPath,
             ]);
@@ -64,7 +67,7 @@ final class WalletTransferService implements WalletTransferServiceContract
 
         $payload = $this->decodeJsonLine($result->output());
 
-        if (!is_array($payload) || !array_key_exists('ok', $payload)) {
+        if (! is_array($payload) || ! array_key_exists('ok', $payload)) {
             Log::error('WalletTransfer: invalid response from node script', [
                 'exit_code' => $result->exitCode(),
                 'stdout' => $result->output(),
@@ -100,7 +103,7 @@ final class WalletTransferService implements WalletTransferServiceContract
         return $normalized;
     }
 
-    private function decodeJsonLine(string $output): array|null
+    private function decodeJsonLine(string $output): ?array
     {
         $output = trim($output);
         if ($output === '') {
@@ -116,5 +119,3 @@ final class WalletTransferService implements WalletTransferServiceContract
         return is_array($decoded) ? $decoded : null;
     }
 }
-
-

@@ -9,12 +9,12 @@ use App\Enums\Currency;
 use App\Enums\InvoiceStatus;
 use App\Enums\Network;
 use App\Observers\InvoiceObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy([InvoiceObserver::class])]
 class Invoice extends Model
@@ -24,6 +24,8 @@ class Invoice extends Model
 
     protected $fillable = [
         'id',
+        'bot_link_token',
+        'requested_amount', 'chain_network', 'token_contract', 'event_index', 'block_number', 'paid_at',
         'user_id',
         'merchant_id',
         'client_id',
@@ -45,6 +47,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
+        'event_index' => 'integer', 'block_number' => 'integer', 'paid_at' => 'datetime',
         'amount' => MoneyAmountCast::class,
         'amount_received' => MoneyAmountCast::class,
         'currency' => Currency::class,
@@ -86,5 +89,3 @@ class Invoice extends Model
         return $this->hasMany(InvoiceCallbackLog::class);
     }
 }
-
-

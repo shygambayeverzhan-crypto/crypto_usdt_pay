@@ -266,7 +266,7 @@ function closeDetails() {
 function openEdit() {
   if (!selected.value) return;
   editForm.clearErrors();
-  editForm.status = selected.value.status;
+  editForm.status = 'cancelled';
   editForm.txid = selected.value.txid || null;
   showEdit.value = true;
 }

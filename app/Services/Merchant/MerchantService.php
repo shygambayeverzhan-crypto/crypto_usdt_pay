@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 final class MerchantService implements MerchantServiceContract
 {
     private const MAX_LOGO_SIZE = 500;
+
     private const LOGO_DIRECTORY = 'merchant-logos';
 
     public function create(
@@ -83,8 +84,14 @@ final class MerchantService implements MerchantServiceContract
 
     private function storeLogo(?UploadedFile $logo): ?string
     {
-        if (!$logo) {
+        if (! $logo) {
             return null;
+        }
+
+        if (config('vercel.enabled')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'logo' => 'Загрузка логотипов пока недоступна. Используйте инициалы магазина.',
+            ]);
         }
 
         $this->assertLogoDimensions($logo);
@@ -99,7 +106,7 @@ final class MerchantService implements MerchantServiceContract
     {
         $imageSize = getimagesize($logo->getPathname());
 
-        if (!$imageSize || count($imageSize) < 2) {
+        if (! $imageSize || count($imageSize) < 2) {
             throw new MerchantLogoInvalidException('Не удалось определить параметры логотипа.');
         }
 
@@ -114,4 +121,3 @@ final class MerchantService implements MerchantServiceContract
         }
     }
 }
-

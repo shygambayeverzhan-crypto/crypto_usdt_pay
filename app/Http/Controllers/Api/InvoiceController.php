@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\Client\ClientServiceContract;
 use App\Contracts\Invoice\InvoiceServiceContract;
 use App\Contracts\Money\MoneyServiceContract;
-use App\Contracts\Client\ClientServiceContract;
-use App\Exceptions\Client\ClientException;
 use App\Enums\Currency;
 use App\Enums\InvoiceStatus;
 use App\Enums\Network;
+use App\Exceptions\Client\ClientException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\InvoiceIndexRequest;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
@@ -36,11 +36,11 @@ class InvoiceController extends Controller
             ->when($filters['network'], fn (Builder $query, string $network) => $query->where('network', Network::from($network)))
             ->when($filters['merchant_id'], fn (Builder $query, int $merchantId) => $query->where('merchant_id', $merchantId))
             ->when($filters['client_external_id'], fn (Builder $query, string $clientExternalId) => $query->whereHas('client', fn (Builder $client) => $client->where('external_id', $clientExternalId)))
-            ->when($filters['external_invoice_id'], fn (Builder $query, string $externalId) => $query->where('external_invoice_id', 'like', '%' . $externalId . '%'))
-            ->when($filters['tag'], fn (Builder $query, string $tag) => $query->where('tag', 'like', '%' . $tag . '%'))
+            ->when($filters['external_invoice_id'], fn (Builder $query, string $externalId) => $query->where('external_invoice_id', 'like', '%'.$externalId.'%'))
+            ->when($filters['tag'], fn (Builder $query, string $tag) => $query->where('tag', 'like', '%'.$tag.'%'))
             ->when($filters['has_callback'], fn (Builder $query) => $query->whereNotNull('callback_url'))
             ->when($filters['search'], function (Builder $query, string $search) {
-                $term = '%' . $search . '%';
+                $term = '%'.$search.'%';
 
                 $query->where(function (Builder $nested) use ($term) {
                     $nested
@@ -93,9 +93,13 @@ class InvoiceController extends Controller
             return response()->json([
                 'message' => $exception->getMessage() ?: __('messages.clients.create_failed'),
             ], 422);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
+            report($e);
+
             return response()->json([
-                'message' => $e->getMessage(),
+                'message' => 'Unable to create invoice. Check payment configuration.',
             ], 422);
         }
     }
@@ -140,11 +144,11 @@ class InvoiceController extends Controller
         $invoice->load('address');
 
         $address = $invoice->address?->address;
-        if (!$address) {
+        if (! $address) {
             abort(404);
         }
 
-        $writer = new PngWriter();
+        $writer = new PngWriter;
         $qrCode = new QrCode(
             data: $address,
             size: 400,
@@ -175,7 +179,7 @@ class InvoiceController extends Controller
             ], 409);
         }
 
-        $service->expire($invoice);
+        $service->updateStatusManually($invoice, InvoiceStatus::CANCELLED);
 
         return response()->json((new InvoiceResource($invoice->refresh()))->resolve());
     }
@@ -187,5 +191,3 @@ class InvoiceController extends Controller
         }
     }
 }
-
-

@@ -10,6 +10,8 @@ import LinkCopy from '@/components/ui/LinkCopy.vue';
 import { vueLang } from '@erag/lang-sync-inertia';
 
 type Invoice = {
+    telegram_url?: string | null
+    requested_amount?: string
     id: string
     external_invoice_id: string | null
     address_id: number
@@ -93,6 +95,8 @@ function toIso(input: string | null | undefined): string {
     >
         <template v-if="invoice">
             <div class="space-y-6">
+                <div v-if="invoice.telegram_url"><p>Персональная ссылка для клиента в Telegram</p><LinkCopy :url="invoice.telegram_url" /></div>
+                <p v-if="invoice.requested_amount">Цена заказа: {{ invoice.requested_amount }} USDT. К оплате: {{ invoice.amount }} USDT.</p>
                 <!-- Основная информация -->
                 <div class="space-y-4">
                     <div class="flex flex-wrap gap-4">

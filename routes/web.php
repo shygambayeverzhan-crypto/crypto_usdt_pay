@@ -53,8 +53,8 @@ Route::get('dashboard', [DashboardController::class, 'index'])
 
 Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('addresses', [AddressController::class, 'index'])->name('addresses.index');
-    Route::post('addresses', [AddressController::class, 'store'])->name('addresses.store');
-    Route::patch('addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
+    Route::post('addresses', [AddressController::class, 'store'])->middleware('role:admin')->name('addresses.store');
+    Route::patch('addresses/{address}', [AddressController::class, 'update'])->middleware('role:admin')->name('addresses.update');
 
     // Clients
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
