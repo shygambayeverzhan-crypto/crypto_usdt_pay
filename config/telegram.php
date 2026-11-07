@@ -19,7 +19,7 @@ return [
     |
     |       - token:    Your Telegram Bot's Access Token.
                         Refer for more details: https://core.telegram.org/bots#botfather
-    |                   Example: (string) '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'.
+    |                   Example: (string) 'YOUR_BOT_TOKEN'.
     |
     |       - commands: (Optional) Commands to register for this bot,
     |                   Supported Values: "Command Group Name", "Shared Command Name", "Full Path to Class".
@@ -33,10 +33,10 @@ return [
     */
     'bots' => [
         'mybot' => [
-            'token' => env('TELEGRAM_BOT_TOKEN', 'YOUR-BOT-TOKEN'),
-            'username' => env('TELEGRAM_BOT_NAME', 'YOUR-BOT-NAME'),
-            'certificate_path' => env('TELEGRAM_CERTIFICATE_PATH', 'YOUR-CERTIFICATE-PATH'),
-            'webhook_url' => env('TELEGRAM_WEBHOOK_URL', 'YOUR-BOT-WEBHOOK-URL'),
+            'token' => env('TELEGRAM_BOT_TOKEN', ''),
+            'username' => env('TELEGRAM_BOT_NAME', ''),
+            'certificate_path' => env('TELEGRAM_CERTIFICATE_PATH'),
+            'webhook_url' => env('TELEGRAM_WEBHOOK_URL', ''),
             'secret_token' => env('TELEGRAM_WEBHOOK_SECRET'),
             /*
              * @see https://core.telegram.org/bots/api#update
@@ -48,7 +48,7 @@ return [
         ],
 
         //        'mySecondBot' => [
-        //            'token' => '123456:abc',
+        //            'token' => 'YOUR_BOT_TOKEN',
         //        ],
     ],
 

@@ -11,8 +11,8 @@ use Illuminate\Support\Str;
 
 final class WalletTransferService implements WalletTransferServiceContract
 {
-    private const WALLET_ID = 'test_wallet_1';
-    private const NETWORK = 'nile';
+
+
     private const SCRIPT = 'send_usdt_cli.js';
     private const TIMEOUT_SECONDS = 120;
 
@@ -27,6 +27,13 @@ final class WalletTransferService implements WalletTransferServiceContract
                 'amount' => $amount,
             ]);
 
+            return false;
+        }
+
+        $walletId = trim((string) config('setup.sandbox_wallet.id'));
+        $network = trim((string) config('setup.sandbox_wallet.network'));
+        if ($walletId === '' || $network !== 'nile') {
+            Log::error('WalletTransfer: configure SANDBOX_WALLET_ID and use the Nile test network.');
             return false;
         }
 
@@ -48,11 +55,11 @@ final class WalletTransferService implements WalletTransferServiceContract
             ->run([
                 'node',
                 self::SCRIPT,
-                self::WALLET_ID,
+                $walletId,
                 $to,
                 $amount,
                 $idempotencyKey,
-                self::NETWORK,
+                $network,
             ]);
 
         $payload = $this->decodeJsonLine($result->output());

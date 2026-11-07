@@ -284,56 +284,30 @@ class BlockchainService implements BlockchainServiceContract
         return $headers;
     }
 
+
     private function getBaseUrl(): string
     {
-        $base = (string) (config('services.trongrid.base_url') ?? 'https://api.trongrid.io');
-        $base = rtrim($base, "/\t\n\r\0\x0B");
-        // Удаляем завершающий /v1 или /v1/
-        if ($base !== '') {
-            $trimmed = rtrim($base, '/');
-            if (substr($trimmed, -3) === '/v1') {
-                $base = rtrim(substr($trimmed, 0, -3), '/');
-            }
+        $base = rtrim(trim((string) config('services.trongrid.base_url')), '/');
+        if ($base === '') {
+            throw new \RuntimeException('Configure TRONGRID_BASE_URL before using blockchain services.');
         }
-        // Нормализация для Nile: RPC доступен на nile.trongrid.io
-        $host = parse_url($base, PHP_URL_HOST) ?: '';
-        if ($host !== '' && str_contains($host, 'nile.trongrid.io')) {
-            return 'https://nile.trongrid.io';
+        if (str_ends_with($base, '/v1')) {
+            $base = substr($base, 0, -3);
         }
         return $base;
     }
 
     private function getApiBaseUrl(): string
     {
-        $base = $this->getBaseUrl();
-        $host = parse_url($base, PHP_URL_HOST) ?: '';
-        $scheme = parse_url($base, PHP_URL_SCHEME) ?: 'https';
-
-        // Если это Nile — используем основной хост nile.trongrid.io для /v1
-        if (str_contains($host, 'nile.trongrid.io')) {
-            return 'https://nile.trongrid.io';
-        }
-
-        // Если уже api.* — используем как есть
-        if ($host !== '' && str_starts_with($host, 'api.')) {
-            return $scheme . '://' . $host;
-        }
-
-        // Для основного домена — api.trongrid.io
-        if (str_ends_with($host, 'trongrid.io')) {
-            return 'https://api.trongrid.io';
-        }
-
-        // Фолбек
-        return $base;
+        return $this->getBaseUrl();
     }
 
     private function getUsdtContractAddress(): string
     {
-        $address = (string) (config('services.trongrid.usdt_contract') ?? 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
-        return trim($address);
+        $address = trim((string) config('services.trongrid.usdt_contract'));
+        if ($address === '') {
+            throw new \RuntimeException('Configure the USDT token contract for the selected network.');
+        }
+        return $address;
     }
 }
-
-
-

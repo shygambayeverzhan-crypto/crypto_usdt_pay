@@ -4,87 +4,61 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\ApiToken;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class InstallProjectCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     */
     protected $signature = 'app:install';
 
-    /**
-     * The console command description.
-     */
-    protected $description = 'Полная установка проекта: migrate:fresh без подтверждений и создание пользователя admin';
+    protected $description = 'Создать администратора из ваших ADMIN_* настроек без сброса базы данных.';
 
     public function handle(): int
     {
-        // 1) Полный сброс и повторный запуск всех миграций (без подтверждений)
-        $this->info('Выполняю migrate:fresh...');
-        $this->call('migrate:fresh', ['--force' => true]);
+        $credentials = [
+            'name' => trim((string) config('setup.admin.name')),
+            'email' => trim((string) config('setup.admin.email')),
+            'password' => (string) config('setup.admin.password'),
+        ];
+        $validator = Validator::make($credentials, [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:12'],
+        ]);
 
-        // 2) Создание единственного пользователя admin
-        $this->info('Создаю пользователя admin...');
-        $user = User::updateOrCreate(
-            ['email' => 'admin@admin.com'],
-            [
-                'name' => 'admin',
-                'password' => 'admin', // будет захеширован через cast в модели
-            ],
-        );
-
-        // 3) Роли admin и user + назначение админу
-        $this->info('Создаю роли admin/user и назначаю админу...');
-        $adminRole = Role::query()->firstOrCreate(
-            ['name' => 'admin'],
-            [
-                'display_name' => __('messages.users.roles.admin'),
-                'description' => __('messages.users.roles.admin_description'),
-            ]
-        );
-        Role::query()->firstOrCreate(
-            ['name' => 'user'],
-            [
-                'display_name' => __('messages.users.roles.user'),
-                'description' => __('messages.users.roles.user_description'),
-            ]
-        );
-        $user->roles()->sync([$adminRole->id]);
-
-        // 4) API токен для администратора (если отсутствует)
-        $this->info('Проверяю API токен администратора...');
-        if (!$user->apiTokens()->exists()) {
-            $user->apiTokens()->create([
-                'name' => 'Default',
-                'token' => $this->generateUniqueToken(),
-            ]);
-            $this->line('API токен создан для admin@admin.com');
-        } else {
-            $this->line('API токен уже существует, пропускаю.');
+        if ($validator->fails()) {
+            $this->error('Заполните ADMIN_NAME, ADMIN_EMAIL и ADMIN_PASSWORD (не менее 12 символов) в приватном .env.');
+            return self::FAILURE;
         }
 
-        $this->line('Создан пользователь:');
-        $this->line('  name: admin');
-        $this->line('  email: admin@admin.com');
-        $this->line('  password: admin');
+        if ($this->call('migrate', ['--force' => true]) !== self::SUCCESS) {
+            return self::FAILURE;
+        }
 
-        $this->info('Установка завершена.');
+        if (User::query()->where('email', $credentials['email'])->exists()) {
+            $this->error('Пользователь с указанным email уже существует. Его пароль и права не изменены.');
+            return self::FAILURE;
+        }
+
+        DB::transaction(function () use ($credentials): void {
+            $adminRole = Role::query()->firstOrCreate(['name' => 'admin'], [
+                'display_name' => __('messages.users.roles.admin'),
+                'description' => __('messages.users.roles.admin_description'),
+            ]);
+            Role::query()->firstOrCreate(['name' => 'user'], [
+                'display_name' => __('messages.users.roles.user'),
+                'description' => __('messages.users.roles.user_description'),
+            ]);
+
+            $user = User::query()->create($credentials);
+            $user->forceFill(['approved_at' => now(), 'email_verified_at' => now()])->save();
+            $user->roles()->syncWithoutDetaching([$adminRole->id]);
+        });
+
+        $this->info('Администратор создан. Удалите ADMIN_PASSWORD из .env и обновите кеш конфигурации. API-ключи доступны в кабинете.');
         return self::SUCCESS;
     }
-
-    private function generateUniqueToken(): string
-    {
-        do {
-            $token = Str::random(64);
-        } while (ApiToken::query()->where('token', $token)->exists());
-
-        return $token;
-    }
 }
-
-

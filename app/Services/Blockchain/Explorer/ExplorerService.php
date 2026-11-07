@@ -12,9 +12,12 @@ class ExplorerService implements ExplorerServiceContract
 {
     public function getTransactionUrl(Network $network, Currency $currency, string $txid): ?string
     {
-        // В дальнейшем расширим маппинги по сетям/валютам.
+        $baseUrl = rtrim((string) config('services.tronscan.base_url'), '/');
+        if ($baseUrl === '') {
+            return null;
+        }
         return match (true) {
-            $network === Network::TRON && $currency === Currency::USDT => config('services.tronscan.base_url')."/#/transaction/{$txid}",
+            $network === Network::TRON && $currency === Currency::USDT => $baseUrl."/#/transaction/{$txid}",
             default => null,
         };
     }

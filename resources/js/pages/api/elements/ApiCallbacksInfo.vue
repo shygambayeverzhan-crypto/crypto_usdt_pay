@@ -16,11 +16,11 @@ const callbackExample = `{
     "network_label": "TRON",
     "status": "paid",
     "txid": "0xabc...",
-    "tx_explorer_url": "https://tronscan.org/#/transaction/0xabc...",
+    "tx_explorer_url": "https://explorer.example.invalid/transaction/YOUR_TRANSACTION_ID",
     "amount_received": "12.34000000",
     "confirmations": 12,
     "expires_at": "2025-01-01T10:00:00.000000Z",
-    "callback_url": "https://merchant.test/callback",
+    "callback_url": "https://merchant.example.invalid/callback",
     "tag": "order-100500",
     "metadata": {
       "order_id": "100500"

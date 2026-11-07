@@ -13,7 +13,7 @@ use Throwable;
 
 final class IpGeolocationService implements IpGeolocationServiceContract
 {
-    private const DEFAULT_BASE_URL = 'https://api.ipgeolocation.io/v2';
+    private const DEFAULT_BASE_URL = '';
 
     public function __construct(
         private readonly ?string $apiKey = null,
@@ -32,7 +32,7 @@ final class IpGeolocationService implements IpGeolocationServiceContract
             return new IpGeolocationResult(IpGeolocationResult::STATUS_SKIPPED, null);
         }
 
-        if (empty($apiKey)) {
+        if (empty($apiKey) || $baseUrl === '') {
             return new IpGeolocationResult(IpGeolocationResult::STATUS_SKIPPED, $lookupIp);
         }
 

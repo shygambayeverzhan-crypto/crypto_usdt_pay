@@ -102,9 +102,9 @@ async function createClientRequest() {
   -H 'X-Api-Key: <PUBLIC_API_KEY>' \
   -d '{
     "external_id": "customer-123",
-    "name": "John Doe",
-    "telegram": "@johndoe",
-    "contact": "john@example.com"
+    "name": "YOUR_CLIENT_NAME",
+    "telegram": "@YOUR_CLIENT_USERNAME",
+    "contact": "YOUR_CLIENT_EMAIL"
   }'` }}</code></pre>
             </div>
         </div>

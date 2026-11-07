@@ -30,3 +30,16 @@ todo.md
 wallet-signer/.env
 wallet-signer/node_modules/
 tz.txt
+
+# Private configuration at any directory depth; templates remain versioned.
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.sql
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db

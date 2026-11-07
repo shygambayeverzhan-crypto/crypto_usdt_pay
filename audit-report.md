@@ -40,7 +40,7 @@
 **Recommendation:** Указывать конкретные доверенные подсети прокси (Cloudflare/Nginx), а не `*`:
 ```php
 $middleware->trustProxies(at: [
-    '173.245.48.0/20', '103.21.244.0/22', /* ... диапазоны CF ... */
+    'YOUR_TRUSTED_PROXY_CIDR_1', 'YOUR_TRUSTED_PROXY_CIDR_2', /* ... диапазоны CF ... */
 ], headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO);
 ```
 

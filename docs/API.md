@@ -355,9 +355,9 @@ curl -o qr.png 'https://pay.example.com/api/v1/invoices/01JABCDE1234XYZ/qr' \
     {
       "id": 1,
       "external_id": "customer-123",
-      "name": "John Doe",
-      "telegram": "@johndoe",
-      "contact": "john@example.com",
+      "name": "YOUR_CLIENT_NAME",
+      "telegram": "@YOUR_CLIENT_USERNAME",
+      "contact": "YOUR_CLIENT_EMAIL",
       "created_at": "...",
       "updated_at": "..."
     }
@@ -387,9 +387,9 @@ curl -o qr.png 'https://pay.example.com/api/v1/invoices/01JABCDE1234XYZ/qr' \
   "client": {
     "id": 1,
     "external_id": "customer-123",
-    "name": "John Doe",
-    "telegram": "@johndoe",
-    "contact": "john@example.com",
+    "name": "YOUR_CLIENT_NAME",
+    "telegram": "@YOUR_CLIENT_USERNAME",
+    "contact": "YOUR_CLIENT_EMAIL",
     "created_at": "...",
     "updated_at": "..."
   }
@@ -411,9 +411,9 @@ curl -X POST 'https://pay.example.com/api/v1/clients' \
   -H 'X-Api-Key: YOUR_PUBLIC_API_KEY' \
   -d '{
     "external_id": "customer-123",
-    "name": "John Doe",
-    "telegram": "@johndoe",
-    "contact": "john@example.com"
+    "name": "YOUR_CLIENT_NAME",
+    "telegram": "@YOUR_CLIENT_USERNAME",
+    "contact": "YOUR_CLIENT_EMAIL"
   }'
 ```
 
@@ -498,9 +498,9 @@ curl -X POST 'https://pay.example.com/api/v1/clients' \
   "client": {
     "id": 10,
     "external_id": "customer-123",
-    "name": "John Doe",
-    "telegram": "@johndoe",
-    "contact": "john@example.com",
+    "name": "YOUR_CLIENT_NAME",
+    "telegram": "@YOUR_CLIENT_USERNAME",
+    "contact": "YOUR_CLIENT_EMAIL",
     "created_at": "2025-01-01T08:00:00.000000Z",
     "updated_at": "2025-01-01T08:00:00.000000Z"
   },
@@ -575,7 +575,7 @@ curl -X POST 'https://pay.example.com/api/v1/clients' \
     "network_label": "TRON",
     "status": "paid",
     "txid": "0xabc...",
-    "tx_explorer_url": "https://tronscan.org/#/transaction/0xabc...",
+    "tx_explorer_url": "https://explorer.example.invalid/transaction/YOUR_TRANSACTION_ID",
     "amount_received": "12.34000000",
     "confirmations": 12,
     "expires_at": "2025-01-01T10:00:00.000000Z",

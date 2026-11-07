@@ -71,7 +71,7 @@ function isTronAddress(tronWeb, addr) {
 async function main() {
     // usage:
     // node send_usdt_cli.js <walletId> <to> <amount> <idempotencyKey> [network]
-    const walletId = getArg(2, "walletId");           // пример: test_wallet_1
+    const walletId = getArg(2, "walletId");           // your configured wallet identifier
     const to = getArg(3, "to");                       // адрес T...
     const amount = getArg(4, "amount");               // "1.00"
     const idempotencyKey = getArg(5, "idempotencyKey");

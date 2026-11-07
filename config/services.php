@@ -1,6 +1,6 @@
 <?php
 
-$trongridNetwork = env('TRONGRID_NETWORK', env('APP_ENV', 'local') === 'production' ? 'mainnet' : 'nile');
+$trongridNetwork = env('TRONGRID_NETWORK', 'nile');
 $isMainnet = strtolower((string) $trongridNetwork) === 'mainnet';
 
 return [
@@ -43,21 +43,21 @@ return [
         // Можно переопределить конкретными переменными TRONGRID_BASE_URL/USDT_CONTRACT
         'base_url' => env(
             'TRONGRID_BASE_URL',
-            $isMainnet ? 'https://api.trongrid.io' : env('TRONGRID_TESTNET_BASE_URL', 'https://api.nile.trongrid.io')
+            $isMainnet ? '' : env('TRONGRID_TESTNET_BASE_URL', '')
         ),
 
         'api_key' => env('TRONGRID_API_KEY'),
 
-        // Контракт USDT: для mainnet дефолт стандартный; для nile — из TRONGRID_TESTNET_USDT_CONTRACT
+        // Token contracts must be supplied for the selected network.
         'usdt_contract' => env(
             'TRONGRID_USDT_CONTRACT',
-            $isMainnet ? 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' : env('TRONGRID_TESTNET_USDT_CONTRACT', '')
+            $isMainnet ? '' : env('TRONGRID_TESTNET_USDT_CONTRACT', '')
         ),
     ],
     'tronscan' => [
         'base_url' => env(
-            'BASE_URL',
-            $isMainnet ? 'https://tronscan.org' : env('TRONSCAN_TESTNET_BASE_URL', 'https://nile.tronscan.org')
+            'TRONSCAN_BASE_URL',
+            $isMainnet ? '' : env('TRONSCAN_TESTNET_BASE_URL', '')
         ),
     ],
 
@@ -67,7 +67,7 @@ return [
     ],
 
     'ipgeolocation' => [
-        'base_url' => env('IPGEOLOCATION_BASE_URL', 'https://api.ipgeolocation.io/v2'),
+        'base_url' => env('IPGEOLOCATION_BASE_URL', ''),
         'api_key' => env('IPGEOLOCATION_API_KEY'),
     ],
 
