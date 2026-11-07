@@ -24,9 +24,15 @@ ENV
 docker build -f Dockerfile.railway -t payment-railway:ci .
 docker compose up -d --wait postgres
 # Simulate Railway restoring an incompatible base-image module at runtime.
-# Only this disposable CI container starts as root; the application runs as www-data.
-docker run -d --name railway-app --user root --network crypto-usdt-pay_default --env-file .env -p 127.0.0.1:8080:8080 payment-railway:ci \
-    sh -c 'ln -sf ../mods-available/mpm_event.load /etc/apache2/mods-enabled/mpm_event.load; exec su -s /bin/sh www-data -c "sh deploy/railway/start.sh"'
+# Inject the bad module into a test layer so Docker opens stdout/stderr for www-data,
+# exactly as in production (switching from root with su breaks /dev/stdout ownership).
+docker build -t payment-railway:ci-platform - <<'DOCKER'
+FROM payment-railway:ci
+USER root
+RUN ln -sf ../mods-available/mpm_event.load /etc/apache2/mods-enabled/mpm_event.load
+USER www-data
+DOCKER
+docker run -d --name railway-app --network crypto-usdt-pay_default --env-file .env -p 127.0.0.1:8080:8080 payment-railway:ci-platform
 attempt=0
 until curl -fsS http://127.0.0.1:8080/login > /tmp/railway-login; do
     attempt=$((attempt + 1))
