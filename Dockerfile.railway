@@ -1,0 +1,32 @@
+FROM php:8.4-apache-bookworm AS base
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libzip-dev libpng-dev libicu-dev unzip git supervisor \
+    && docker-php-ext-install -j$(nproc) pdo_pgsql bcmath gd intl pcntl zip opcache \
+    && a2enmod rewrite headers \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+WORKDIR /var/www/html
+
+FROM base AS build
+COPY --from=node:22-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:22-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+COPY . .
+RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+RUN npm ci --no-audit --no-fund && ALLOW_REGISTRATION=true npm run build
+RUN rm -rf node_modules tests .cursor wallet-signer .github
+
+FROM base AS runtime
+COPY --from=build --chown=www-data:www-data /var/www/html /var/www/html
+COPY deploy/vercel/apache.conf /etc/apache2/sites-available/000-default.conf
+RUN printf 'Listen 8080\n' > /etc/apache2/ports.conf \
+    && printf 'max_execution_time=120\nmemory_limit=256M\nexpose_php=Off\ndefault_socket_timeout=10\n' > /usr/local/etc/php/conf.d/vercel.ini \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs \
+    && chown -R www-data:www-data storage bootstrap/cache /var/run/apache2 /var/lock/apache2
+ENV PORT=8080 APP_ENV=production APP_DEBUG=false RAILWAY_RUNTIME=true \
+    DB_CONNECTION=pgsql DB_SSLMODE=disable SESSION_DRIVER=database CACHE_STORE=database \
+    QUEUE_CONNECTION=database LOG_CHANNEL=stderr SESSION_SECURE_COOKIE=true \
+    ALLOW_REGISTRATION=false INERTIA_SSR_ENABLED=false XDG_CONFIG_HOME=/tmp
+RUN printf 'StartServers 1\nMinSpareServers 1\nMaxSpareServers 2\nMaxRequestWorkers 8\nMaxConnectionsPerChild 500\n' > /etc/apache2/mods-available/mpm_prefork.conf
+USER www-data
+EXPOSE 8080
+CMD ["sh", "deploy/railway/start.sh"]

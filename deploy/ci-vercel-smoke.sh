@@ -23,7 +23,7 @@ MAIL_MAILER=log
 CRON_SECRET=ci-disposable-maintenance-secret-0123456789
 ENV
 docker build -f Dockerfile.vercel -t payment-vercel:ci .
-docker compose up -d postgres
+docker compose up -d --wait postgres
 docker run --rm --network crypto-usdt-pay_default --env-file .env payment-vercel:ci php artisan app:install
 docker run --rm --network crypto-usdt-pay_default --env-file .env payment-vercel:ci php artisan app:install-settings
 docker run -d --name vercel-app --network crypto-usdt-pay_default --env-file .env -p 127.0.0.1:8080:8080 payment-vercel:ci

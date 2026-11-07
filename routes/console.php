@@ -9,9 +9,12 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Планировщик: обновление балансов адресов каждую минуту
-Schedule::command('addresses:sync-balances --only-active=1')->everyMinute();
+if (! config('railway.enabled')) {
+    Schedule::command('addresses:sync-balances --only-active=1')->everyMinute();
+}
 
 // Планировщик: создание инвойса для callback sandbox каждые 5 минут
 // Schedule::command('invoices:callback-sandbox')->everyFiveMinutes();
 
-Schedule::command('payments:reconcile')->everyMinute()->withoutOverlapping(60);
+Schedule::command(config('railway.enabled') ? 'payments:tick' : 'payments:reconcile')
+    ->everyMinute()->withoutOverlapping(5);

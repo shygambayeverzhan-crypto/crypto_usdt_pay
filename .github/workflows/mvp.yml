@@ -58,3 +58,14 @@ jobs:
         run: |
           docker rm -f vercel-app || true
           docker compose down -v
+  railway-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh deploy/ci-railway-smoke.sh
+      - if: failure()
+        run: docker logs railway-app
+      - if: always()
+        run: |
+          docker rm -f railway-app || true
+          docker compose down -v

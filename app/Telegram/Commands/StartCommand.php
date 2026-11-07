@@ -26,9 +26,12 @@ final class StartCommand extends Command
         $chat = $message?->getChat();
         $from = $message?->getFrom();
 
-        if (! $chat || $chat->type !== 'private' || $token === '') {
+        if (! $chat || $chat->type !== 'private') {
+            return;
+        }
+        if ($token === '') {
             $this->replyWithMessage([
-                'text' => __('messages.notifications.telegram.start_missing_token'),
+                'text' => "Бот приёма USDT в сети TRON.\nОткройте персональную ссылку заказа от продавца, чтобы получать статус оплаты.\n/status — ваши последние платежи.\nПодтверждение появится после проверки транзакции и подтверждений сети.",
             ]);
 
             return;

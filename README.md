@@ -1,8 +1,10 @@
 # Crypto USDT Pay
 
-MVP приёма USDT TRC-20 на публичный адрес Trust Wallet: владелец и селлеры, магазины, заказы, платёжная форма, API и Telegram-бот. Laravel/Vue монолит с PostgreSQL. Основной вариант запуска — Vercel Container Runtime; Docker Compose для VPS также сохранён.
+MVP приёма USDT TRC-20 на публичный адрес Trust Wallet: владелец и селлеры, магазины, заказы, платёжная форма, API и Telegram-бот. Laravel/Vue монолит с PostgreSQL. Основной вариант запуска — Railway: постоянный контейнер приложения и PostgreSQL. Docker Compose для VPS также сохранён.
 
-**Vercel:** используйте [инструкцию развёртывания](docs/DEPLOY-VERCEL.md). `Dockerfile.vercel` собирает PHP и Vue вместе; пресет Vite для этого проекта неверен. Для ежеминутного Vercel Cron нужен Pro/Enterprise. База, очередь и сессии находятся в PostgreSQL; постоянный worker на Vercel не запускается.
+**Railway:** начните с [инструкции развёртывания и подключения Telegram](docs/DEPLOY-RAILWAY.md). Dockerfile.railway запускает панель, очередь и ежеминутную проверку платежей вместе; Vercel Pro не требуется.
+
+**Vercel (альтернативный вариант):** используйте [инструкцию развёртывания](docs/DEPLOY-VERCEL.md). `Dockerfile.vercel` собирает PHP и Vue вместе; пресет Vite для этого проекта неверен. Для ежеминутного Vercel Cron нужен Pro/Enterprise. База, очередь и сессии находятся в PostgreSQL; постоянный worker на Vercel не запускается.
 
 Персональные реквизиты не заданы. Заполните собственные настройки по инструкции [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 

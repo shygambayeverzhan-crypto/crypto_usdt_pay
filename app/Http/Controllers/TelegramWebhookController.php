@@ -16,11 +16,13 @@ class TelegramWebhookController extends Controller
             Telegram::commandsHandler(true);
         } catch (\Throwable $throwable) {
             Log::warning('Telegram webhook handler failed', [
-                'error' => $throwable->getMessage(),
+                'exception_class' => $throwable::class,
             ]);
+
+            // Telegram retries failed deliveries; a 204 would silently lose the command.
+            return response('Temporarily unavailable', 503);
         }
 
         return response()->noContent();
     }
 }
-
