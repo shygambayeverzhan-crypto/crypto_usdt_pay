@@ -21,7 +21,9 @@ type Invoice = {
   address_id: number
   address?: string | null
   merchant?: MerchantInfo | null
-  amount: number
+  chain_network?: string
+  requested_amount?: string
+  amount: string
   currency: string
   currency_label?: string
   network: string
@@ -102,7 +104,7 @@ async function refresh() {
   try {
     const { data } = await axios.get(`/pay/${invoice.value.id}/data`);
     invoice.value = data as Invoice;
-    if (statuses.value.final?.includes(invoice.value.status)) {
+    if (['paid', 'cancelled'].includes(invoice.value.status)) {
       if (timer) {
         clearInterval(timer);
         timer = null;
@@ -331,6 +333,11 @@ onBeforeUnmount(() => {
 
 <template>
   <PaymentFormLayout>
+    <div class="mx-auto max-w-xl p-4 text-sm text-slate-500">
+      <strong v-if="invoice.chain_network !== 'mainnet'">Тестовая сеть Nile — не отправляйте реальные USDT.</strong>
+      <p>Сеть: TRON TRC-20. Отправьте ровно {{ invoice.amount }} USDT одним переводом. Комиссия оплачивается отдельно.</p>
+      <p v-if="invoice.requested_amount !== invoice.amount">Цена заказа: {{ invoice.requested_amount }} USDT. Итоговая сумма включает добавку для идентификации заказа.</p>
+    </div>
     <div class="relative isolate min-h-screen overflow-hidden bg-[#0c0c0c] text-zinc-100">
       <div
         aria-hidden="true"

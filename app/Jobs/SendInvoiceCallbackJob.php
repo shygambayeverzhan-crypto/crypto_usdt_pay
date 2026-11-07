@@ -30,7 +30,7 @@ class SendInvoiceCallbackJob implements ShouldQueue
     public function handle(): void
     {
         $invoice = Invoice::query()->find($this->invoiceId);
-        if (! $invoice || empty($invoice->callback_url)) {
+        if (! config('payments.callbacks_enabled') || ! $invoice || empty($invoice->callback_url)) {
             return;
         }
 

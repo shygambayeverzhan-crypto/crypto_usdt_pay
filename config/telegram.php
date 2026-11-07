@@ -43,6 +43,7 @@ return [
              */
             'allowed_updates' => null,
             'commands' => [
+                \App\Telegram\Commands\StatusCommand::class,
                 // Acme\Project\Commands\MyTelegramBot\BotCommand::class
             ],
         ],

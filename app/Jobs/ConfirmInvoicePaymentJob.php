@@ -30,17 +30,12 @@ class ConfirmInvoicePaymentJob implements ShouldQueue
     public function handle(InvoiceServiceContract $service): void
     {
         $invoice = Invoice::query()->find($this->invoiceId);
-        if (!$invoice) {
+        if (! $invoice) {
             return;
         }
 
         // Если инвойс уже финализирован — прекращаем
         if ($invoice->status->isFinal()) {
-            return;
-        }
-
-        // Если истёк — отдельно обработает ExpireInvoiceJob, здесь просто выходим
-        if ($invoice->expires_at && now()->greaterThanOrEqualTo($invoice->expires_at)) {
             return;
         }
 
@@ -58,5 +53,3 @@ class ConfirmInvoicePaymentJob implements ShouldQueue
         self::dispatch($invoice->id, $this->minConfirmations)->delay(now()->addMinute());
     }
 }
-
-

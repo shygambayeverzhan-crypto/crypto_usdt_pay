@@ -12,4 +12,6 @@ Artisan::command('inspire', function () {
 Schedule::command('addresses:sync-balances --only-active=1')->everyMinute();
 
 // Планировщик: создание инвойса для callback sandbox каждые 5 минут
-//Schedule::command('invoices:callback-sandbox')->everyFiveMinutes();
+// Schedule::command('invoices:callback-sandbox')->everyFiveMinutes();
+
+Schedule::command('payments:reconcile')->everyMinute()->withoutOverlapping(60);

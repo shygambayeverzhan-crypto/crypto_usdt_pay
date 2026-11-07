@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\ApiToken;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class ApiKeyAuth
@@ -26,7 +25,7 @@ class ApiKeyAuth
             ->where('token', $provided)
             ->first();
 
-        if (!$token || !$token->user) {
+        if (! $token || ! $token->user || $token->name !== ApiToken::NAME_DEFAULT || ! $token->user->approved_at) {
             return $this->unauthorized();
         }
 
@@ -39,7 +38,7 @@ class ApiKeyAuth
                 return $this->normalizeIp($allowed->ip) === $normalizedRequestIp;
             });
 
-            if (!$isAllowed) {
+            if (! $isAllowed) {
                 return response()->json([
                     'message' => __('messages.api.ip_not_allowed'),
                 ], 403);
@@ -65,5 +64,3 @@ class ApiKeyAuth
         ], 401);
     }
 }
-
-

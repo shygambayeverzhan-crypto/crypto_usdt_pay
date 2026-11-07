@@ -17,8 +17,7 @@ final class StartCommand extends Command
 
     public function __construct(
         private readonly TelegramServiceContract $telegramService,
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
@@ -27,10 +26,19 @@ final class StartCommand extends Command
         $chat = $message?->getChat();
         $from = $message?->getFrom();
 
-        if (!$chat || $token === '') {
+        if (! $chat || $chat->type !== 'private' || $token === '') {
             $this->replyWithMessage([
                 'text' => __('messages.notifications.telegram.start_missing_token'),
             ]);
+
+            return;
+        }
+
+        if (str_starts_with($token, 'pay_')) {
+            $invoice = app(\App\Services\Telegram\CustomerPaymentLink::class)->bind(substr($token, 4), (string) $chat->id);
+            $this->replyWithMessage(['text' => $invoice
+                ? 'Заказ: '.$invoice->id."\nСтатус: ".$invoice->status->value."\n".route('invoices.public', $invoice)
+                : 'Ссылка недействительна или уже привязана к другому чату.']);
 
             return;
         }
@@ -56,4 +64,3 @@ final class StartCommand extends Command
         }
     }
 }
-

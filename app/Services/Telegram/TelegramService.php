@@ -24,11 +24,11 @@ final class TelegramService implements TelegramServiceContract
             'user_id' => $user->id,
         ]);
 
-        if (!$account->link_token) {
+        if (! $account->link_token) {
             $account->link_token = $this->generateToken();
         }
 
-        if (!$account->exists || $account->isDirty()) {
+        if (! $account->exists || $account->isDirty()) {
             $account->save();
         }
 
@@ -56,33 +56,34 @@ final class TelegramService implements TelegramServiceContract
 
     public function handleStart(string $token, array $telegramUser, string $chatId): TelegramAccount
     {
-        $account = TelegramAccount::query()
-            ->where('link_token', $token)
-            ->first();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($token, $telegramUser, $chatId) {
+            $account = TelegramAccount::query()->where('link_token', $token)->lockForUpdate()->first();
 
-        if (!$account) {
-            throw new TelegramStartTokenInvalidException(__('messages.notifications.telegram.invalid_token'));
-        }
+            if (! $account || $account->linked_at || $account->updated_at->lt(now()->subMinutes(15))) {
+                throw new TelegramStartTokenInvalidException(__('messages.notifications.telegram.invalid_token'));
+            }
 
-        $account->fill([
-            'chat_id' => $chatId,
-            'username' => Arr::get($telegramUser, 'username'),
-            'first_name' => Arr::get($telegramUser, 'first_name'),
-            'last_name' => Arr::get($telegramUser, 'last_name'),
-            'linked_at' => now(),
-            'is_active' => true,
-        ]);
+            $account->fill([
+                'link_token' => $this->generateToken(),
+                'chat_id' => $chatId,
+                'username' => Arr::get($telegramUser, 'username'),
+                'first_name' => Arr::get($telegramUser, 'first_name'),
+                'last_name' => Arr::get($telegramUser, 'last_name'),
+                'linked_at' => now(),
+                'is_active' => true,
+            ]);
 
-        $account->save();
+            $account->save();
 
-        return $account;
+            return $account;
+        });
     }
 
     public function sendNotification(Notification $notification): void
     {
         $user = $notification->user()->first();
 
-        if (!$user) {
+        if (! $user) {
             throw new TelegramServiceException('Пользователь уведомления не найден.');
         }
 
@@ -90,7 +91,7 @@ final class TelegramService implements TelegramServiceContract
             ->where('is_active', true)
             ->first();
 
-        if (!$account || !$account->chat_id) {
+        if (! $account || ! $account->chat_id) {
             throw new TelegramAccountNotLinkedException(__('messages.notifications.telegram.not_linked'));
         }
 
@@ -126,7 +127,7 @@ final class TelegramService implements TelegramServiceContract
     {
         $username = $this->botUsername();
 
-        if (!$username) {
+        if (! $username) {
             return null;
         }
 
@@ -138,4 +139,3 @@ final class TelegramService implements TelegramServiceContract
         return Str::random(32);
     }
 }
-

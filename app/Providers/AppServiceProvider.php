@@ -3,44 +3,44 @@
 namespace App\Providers;
 
 use App\Contracts\Address\AddressServiceContract;
-use App\Contracts\Blockchain\BlockchainServiceContract;
-use App\Mixins\ResponseMixins;
-use App\Contracts\Blockchain\ExplorerServiceContract;
-use App\Services\Blockchain\Explorer\ExplorerService;
-use App\Contracts\Money\MoneyServiceContract;
-use App\Services\Address\AddressService;
-use App\Services\Blockchain\BlockchainService;
-use App\Services\Money\MoneyService;
-use App\Contracts\Lang\LanguageSettingsServiceContract;
-use App\Services\Lang\LanguageSettingsService;
-use App\Contracts\Invoice\InvoiceServiceContract;
-use App\Services\Invoice\InvoiceService;
-use App\Contracts\Invoice\InvoiceCallbackServiceContract;
-use App\Services\Invoice\InvoiceCallbackService;
 use App\Contracts\AppSettings\AppSettingsServiceContract;
-use App\Services\AppSettings\AppSettingsService;
-use App\Contracts\IpGeolocation\IpGeolocationServiceContract;
-use App\Services\IpGeolocation\IpGeolocationService;
-use App\Contracts\Lang\LangServiceContract;
-use App\Services\Lang\LangService;
-use App\Contracts\LoginHistory\LoginHistoryServiceContract;
-use App\Services\LoginHistory\LoginHistoryService;
-use App\Contracts\Merchant\MerchantServiceContract;
-use App\Services\Merchant\MerchantService;
-use App\Contracts\Store\StoreServiceContract;
-use App\Services\Store\StoreService;
+use App\Contracts\Blockchain\BlockchainServiceContract;
+use App\Contracts\Blockchain\ExplorerServiceContract;
 use App\Contracts\Client\ClientServiceContract;
-use App\Services\Client\ClientService;
+use App\Contracts\Invoice\InvoiceCallbackServiceContract;
+use App\Contracts\Invoice\InvoiceServiceContract;
+use App\Contracts\IpGeolocation\IpGeolocationServiceContract;
+use App\Contracts\Lang\LangServiceContract;
+use App\Contracts\Lang\LanguageSettingsServiceContract;
+use App\Contracts\LoginHistory\LoginHistoryServiceContract;
+use App\Contracts\Merchant\MerchantServiceContract;
+use App\Contracts\Money\MoneyServiceContract;
 use App\Contracts\Notification\NotificationServiceContract;
-use App\Services\Notification\NotificationService;
+use App\Contracts\Store\StoreServiceContract;
 use App\Contracts\Telegram\TelegramServiceContract;
-use App\Services\Telegram\TelegramService;
 use App\Contracts\WalletTransfer\WalletTransferServiceContract;
+use App\Mixins\ResponseMixins;
+use App\Services\Address\AddressService;
+use App\Services\AppSettings\AppSettingsService;
+use App\Services\Blockchain\BlockchainService;
+use App\Services\Blockchain\Explorer\ExplorerService;
+use App\Services\Client\ClientService;
+use App\Services\Invoice\InvoiceCallbackService;
+use App\Services\Invoice\InvoiceService;
+use App\Services\IpGeolocation\IpGeolocationService;
+use App\Services\Lang\LangService;
+use App\Services\Lang\LanguageSettingsService;
+use App\Services\LoginHistory\LoginHistoryService;
+use App\Services\Merchant\MerchantService;
+use App\Services\Money\MoneyService;
+use App\Services\Notification\NotificationService;
+use App\Services\Store\StoreService;
+use App\Services\Telegram\TelegramService;
 use App\Services\WalletTransfer\WalletTransferService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 use LaravelLangSyncInertia\Services\LangService as VendorLangService;
 
@@ -77,7 +77,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
-        Response::mixin(new ResponseMixins());
+        Response::mixin(new ResponseMixins);
     }
 
     private function configureRateLimiting(): void
@@ -85,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api.v1', function (Request $request) {
             $ipKey = 'ip:'.(string) $request->ip();
             $apiKey = (string) $request->header('X-Api-Key', '');
-            $keyIdentifier = $apiKey !== '' ? 'key:'.$apiKey : 'key:missing|'.$ipKey;
+            $keyIdentifier = $apiKey !== '' ? 'key:'.hash('sha256', $apiKey) : 'key:missing|'.$ipKey;
 
             return collect([
                 Limit::perMinute(60)->by($ipKey),

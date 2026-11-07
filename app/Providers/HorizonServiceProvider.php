@@ -27,7 +27,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function authorization(): void
     {
         Horizon::auth(static function ($request) {
-            return $request->user()->hasRole('admin');
+            return $request->user()?->hasRole('admin') ?? false;
         });
     }
 

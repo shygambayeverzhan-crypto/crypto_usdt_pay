@@ -84,12 +84,13 @@ function submit() {
         @close="close"
     >
         <form class="mt-4 grid gap-4" @submit.prevent="submit">
+            <p>Можно отменить только ожидающий оплаты счёт. Оплата подтверждается автоматически в сети TRON.</p>
             <FormControl :error="fieldErrors.status">
                 <Label for="status" required>{{ __('frontend.invoices.fields.status') }}</Label>
                 <Select
                     id="status"
                     v-model="form.status"
-                    :options="statusOptions"
+                    :options="statusOptions.filter(option => option.value === 'cancelled')"
                     required
                 />
             </FormControl>

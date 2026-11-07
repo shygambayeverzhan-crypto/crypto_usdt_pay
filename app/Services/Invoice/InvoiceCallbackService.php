@@ -11,15 +11,13 @@ use App\Models\Invoice;
 class InvoiceCallbackService implements InvoiceCallbackServiceContract
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function send(Invoice $invoice, string $event): void
     {
-        if (empty($invoice->callback_url)) {
+        if (! config('payments.callbacks_enabled') || empty($invoice->callback_url)) {
             return;
         }
         SendInvoiceCallbackJob::dispatch($invoice->id, $event)->onQueue('callbacks');
     }
 }
-
-

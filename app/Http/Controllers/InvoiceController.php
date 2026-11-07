@@ -4,32 +4,31 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Contracts\Client\ClientServiceContract;
+use App\Contracts\Invoice\InvoiceCallbackServiceContract;
 use App\Contracts\Invoice\InvoiceServiceContract;
 use App\Contracts\Money\MoneyServiceContract;
-use App\Enums\InvoiceStatus;
 use App\Enums\Currency;
+use App\Enums\InvoiceStatus;
 use App\Enums\Network;
 use App\Enums\NetworkCurrency;
-use App\Contracts\Client\ClientServiceContract;
 use App\Exceptions\Client\ClientException;
-use App\Http\Requests\UpdateInvoiceRequest;
-use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\InvoiceFilterRequest;
+use App\Http\Requests\StoreInvoiceRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
+use App\Http\Resources\ClientResource;
 use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\MerchantResource;
-use App\Http\Resources\ClientResource;
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Merchant;
-use App\Models\Client;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 use Inertia\Response;
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Writer\PngWriter;
-use App\Contracts\Invoice\InvoiceCallbackServiceContract;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -39,7 +38,7 @@ class InvoiceController extends Controller
         $filters = $request->filters();
 
         $paginator = Invoice::query()
-            ->where('user_id', Auth::id())
+            ->when(! Auth::user()->hasRole('admin'), fn ($q) => $q->where('user_id', Auth::id()))
             ->with(['address', 'merchant', 'client'])
             ->when($filters['status'], fn (Builder $query, string $status) => $query->where('status', InvoiceStatus::from($status)))
             ->when($filters['currency'], fn (Builder $query, string $currency) => $query->where('currency', Currency::from($currency)))
@@ -48,7 +47,7 @@ class InvoiceController extends Controller
             ->when($filters['client_id'], fn (Builder $query, string $clientId) => $query->where('client_id', $clientId))
             ->when($filters['has_callback'], fn (Builder $query) => $query->whereNotNull('callback_url'))
             ->when($filters['search'], function (Builder $query, string $search) {
-                $term = '%' . $search . '%';
+                $term = '%'.$search.'%';
 
                 $query->where(function (Builder $nested) use ($term) {
                     $nested
@@ -72,7 +71,7 @@ class InvoiceController extends Controller
         foreach (Currency::cases() as $currency) {
             foreach (NetworkCurrency::networksByCurrency($currency) as $network) {
                 $currencyNetworkOptions[] = [
-                    'value' => $currency->value . '|' . $network->value,
+                    'value' => $currency->value.'|'.$network->value,
                     'currency' => $currency->value,
                     'currency_label' => strtoupper($currency->value),
                     'network' => $network->value,
@@ -198,7 +197,7 @@ class InvoiceController extends Controller
         $invoice->load(['address', 'client']);
 
         return $this->inertia('PaymentForm/Index', [
-            'invoice' => (new InvoiceResource($invoice->loadMissing(['merchant'])))->resolve(),
+            'invoice' => (new \App\Http\Resources\PublicInvoiceResource($invoice->loadMissing(['merchant'])))->resolve(),
             'appName' => config('app.name'),
             'statuses' => [
                 'active' => InvoiceStatus::active(),
@@ -211,7 +210,7 @@ class InvoiceController extends Controller
     {
         $invoice->load(['address', 'merchant', 'client']);
 
-        return (new InvoiceResource($invoice))->resolve();
+        return (new \App\Http\Resources\PublicInvoiceResource($invoice))->resolve();
     }
 
     public function publicQr(Invoice $invoice)
@@ -219,11 +218,11 @@ class InvoiceController extends Controller
         $invoice->load('address');
 
         $address = $invoice->address?->address;
-        if (!$address) {
+        if (! $address) {
             abort(404);
         }
 
-        $writer = new PngWriter();
+        $writer = new PngWriter;
         $qrCode = new QrCode(
             data: $address,
             size: 400,
@@ -285,10 +284,8 @@ class InvoiceController extends Controller
 
     private function authorizeInvoice(Invoice $invoice): void
     {
-        if ($invoice->user_id !== Auth::id()) {
+        if ($invoice->user_id !== Auth::id() && ! Auth::user()->hasRole('admin')) {
             abort(404);
         }
     }
 }
-
-
