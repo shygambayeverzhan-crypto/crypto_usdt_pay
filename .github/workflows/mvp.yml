@@ -1,5 +1,11 @@
 name: MVP verification
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: mvp-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -36,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cp .env.example .env
-      - run: docker build --target app -t crypto-usdt-pay:ci .
-      - run: docker build --target web -t crypto-usdt-pay-web:ci .
+      - run: sh deploy/ci-smoke.sh
+      - if: failure()
+        run: docker compose logs --tail=100
+      - if: always()
+        run: docker compose down -v
