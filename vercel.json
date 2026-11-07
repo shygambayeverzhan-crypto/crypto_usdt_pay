@@ -1,8 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "container",
-  "crons": [
-    { "path": "/internal/payments/tick", "schedule": "* * * * *" },
-    { "path": "/internal/queue/tick", "schedule": "* * * * *" }
-  ]
+  "framework": "container"
 }
