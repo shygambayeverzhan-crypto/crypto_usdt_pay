@@ -41,4 +41,4 @@ done
 docker compose exec -T web wget -qO- http://127.0.0.1:8080/login > /tmp/payment-login.html
 grep -q '/build/assets/' /tmp/payment-login.html
 # Readiness check uses DB + Redis, with no wallet, bot, or blockchain requests.
-docker compose exec -T app php artisan tinker --execute='if (DB::table("users")->count() !== 1) { throw new RuntimeException("Owner bootstrap failed"); } Cache::put("ci-smoke", "ok", 60); if (Cache::get("ci-smoke") !== "ok") { throw new RuntimeException("Redis failed"); }'
+docker compose exec -T -e XDG_CONFIG_HOME=/tmp app php artisan tinker --execute='if (DB::table("users")->count() !== 1) { throw new RuntimeException("Owner bootstrap failed"); } Cache::put("ci-smoke", "ok", 60); if (Cache::get("ci-smoke") !== "ok") { throw new RuntimeException("Redis failed"); }'
