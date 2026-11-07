@@ -58,7 +58,7 @@ final class StartCommand extends Command
             ]);
         } catch (\Throwable $throwable) {
             Log::warning('Telegram start command failed', [
-                'error' => $throwable->getMessage(),
+                'exception_class' => $throwable::class,
             ]);
 
             $this->replyWithMessage([

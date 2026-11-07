@@ -13,7 +13,6 @@ use App\Services\Telegram\Exceptions\TelegramServiceException;
 use App\Services\Telegram\Exceptions\TelegramStartTokenInvalidException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
 final class TelegramService implements TelegramServiceContract
@@ -102,10 +101,10 @@ final class TelegramService implements TelegramServiceContract
                 'chat_id' => $account->chat_id,
                 'text' => $text,
             ]);
-        } catch (TelegramSDKException $exception) {
+        } catch (\Throwable) {
+            // HTTP exceptions can embed the bot token in their URL or previous exception.
             throw new TelegramServiceException(
-                __('messages.notifications.telegram.delivery_failed'),
-                previous: $exception
+                __('messages.notifications.telegram.delivery_failed')
             );
         }
     }

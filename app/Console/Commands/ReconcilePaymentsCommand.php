@@ -46,7 +46,7 @@ class ReconcilePaymentsCommand extends Command
                         $invoice->forceFill(['customer_notified_at' => now()])->save();
                     } catch (\Throwable $e) {
                         $failed = true;
-                        report($e);
+                        \Illuminate\Support\Facades\Log::warning('Telegram payment notification failed', ['exception_class' => $e::class]);
                     }
                 }
             });
