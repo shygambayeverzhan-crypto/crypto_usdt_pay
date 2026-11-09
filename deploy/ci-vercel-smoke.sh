@@ -33,6 +33,8 @@ until curl -fsS http://127.0.0.1:8080/up > /dev/null; do
     if [ "$attempt" -ge 15 ]; then docker logs vercel-app; exit 1; fi
     sleep 2
 done
+curl -fsS http://127.0.0.1:8080/ready > /dev/null
+docker exec vercel-app php artisan deployment:check
 curl -fsS -c /tmp/ci-cookies http://127.0.0.1:8080/login > /tmp/ci-login.html
 grep -q '/build/assets/' /tmp/ci-login.html
 csrf=$(python3 -c 'import http.cookiejar, urllib.parse; j=http.cookiejar.MozillaCookieJar("/tmp/ci-cookies"); j.load(ignore_discard=True); print(urllib.parse.unquote(next(c.value for c in j if c.name == "XSRF-TOKEN")))')
