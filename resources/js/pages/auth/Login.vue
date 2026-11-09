@@ -21,6 +21,7 @@ const { __ } = vueLang();
 
 function submit() {
     form.post(loginStore.url(), {
+        onError: () => document.getElementById('email')?.focus(),
         onFinish: () => form.reset('password'),
     });
 }
@@ -55,7 +56,7 @@ function submit() {
                         v-model="form.email"
                         class="input input-bordered w-full"
                     />
-                    <p v-if="form.errors.email" class="text-error text-sm">{{ form.errors.email }}</p>
+                    <p v-if="form.errors.email" role="alert" class="text-error text-sm">{{ form.errors.email }}</p>
                 </div>
 
                 <div class="grid gap-2">
@@ -105,9 +106,9 @@ function submit() {
                 </button>
             </div>
 
-            <div class="text-center text-sm text-base-content/60" v-if="props.canRegister">
+            <div class="grid gap-3 text-center text-sm text-base-content/60" v-if="props.canRegister">
                 {{ __('frontend.auth.login.no_account') }}
-                <Link :href="register().url" tabindex="5" class="link link-hover">{{ __('frontend.auth.login.register') }}</Link>
+                <Link :href="register().url" tabindex="6" class="btn btn-outline w-full" data-test="registration-link">{{ __('frontend.auth.login.register') }}</Link>
             </div>
         </form>
     </AuthBase>
