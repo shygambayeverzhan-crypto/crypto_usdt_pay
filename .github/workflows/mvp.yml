@@ -37,7 +37,7 @@ jobs:
           coverage: none
       - run: cp .env.example .env
       - run: composer install --prefer-dist --no-interaction
-      - run: php vendor/bin/pest tests/Feature/PaymentSafetyTest.php tests/Feature/TelegramDeploymentTest.php tests/Feature/DeploymentReadinessTest.php
+      - run: php vendor/bin/pest tests/Feature/PaymentSafetyTest.php tests/Feature/TelegramDeploymentTest.php tests/Feature/DeploymentReadinessTest.php tests/Feature/Auth/DatabaseSessionAuthenticationTest.php
   containers:
     runs-on: ubuntu-latest
     steps:
