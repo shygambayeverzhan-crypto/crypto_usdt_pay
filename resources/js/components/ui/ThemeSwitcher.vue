@@ -33,7 +33,12 @@ function toggleTheme() {
 }
 
 onMounted(() => {
-    const savedTheme = window.localStorage.getItem('theme');
+    let savedTheme: string | null = null;
+    try {
+        savedTheme = window.localStorage.getItem('theme');
+    } catch {
+        // Private browsing can make storage unavailable; the page theme still works.
+    }
     const htmlTheme = document.documentElement.getAttribute('data-theme');
     const theme = isThemeName(savedTheme) ? savedTheme : (isThemeName(htmlTheme) ? htmlTheme : 'dark');
 
