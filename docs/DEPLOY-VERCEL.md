@@ -76,6 +76,12 @@ docker run --rm --env-file .env.vercel.private payment-vercel php artisan migrat
 
 Используйте прямое соединение провайдера для миграций, если его pooler ограничивает DDL. После создания владельца удалите ADMIN_PASSWORD из Vercel и файла. APP_KEY сохраняйте вместе с защищёнными backup. Публичного HTTP endpoint для установки или миграций нет.
 
+## Neon: вход и пул соединений
+
+Для Vercel PostgreSQL-драйвер по умолчанию выполняет запросы с параметрами без именованных prepared statements (`DB_DISABLE_PREPARES=true` при `VERCEL_RUNTIME=true`). Параметры продолжает обрабатывать сервер PostgreSQL. Это нужно для совместимости libpq 15 из Bookworm с пулом PgBouncer: без настройки обновление счётчика попыток входа может завершиться `SQLSTATE[25P02]` и HTTP 500. Для другого хостинга с пулом включите `DB_DISABLE_PREPARES=true` явно. Не заменяйте общий кеш на локальный и не отключайте ограничение попыток входа.
+
+Основание: [PgBouncer FAQ](https://www.pgbouncer.org/faq.html#how-to-use-prepared-statements-with-transaction-pooling), [PHP PDO PostgreSQL](https://www.php.net/manual/en/class.pdo-pgsql.php).
+
 ## Фоновая работа
 
 Проверка аккаунта YFPRD показала **Hobby**: Vercel отклонил ежеминутные Cron. Поэтому корневой `vercel.json` развёртывает только приложение, **без автоматического расписания**; приём платежей по умолчанию выключен. Это позволяет проверить сборку и подключить тестовую БД, но не является запуском автоматической платёжки.
