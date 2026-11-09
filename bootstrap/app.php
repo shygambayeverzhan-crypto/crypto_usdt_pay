@@ -10,6 +10,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -50,5 +52,17 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withEvents()
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (ValidationException $exception, Request $request): void {
+            // Inertia navigation and no-referrer can leave the previous URL at '/'.
+            // Return authentication errors to the form that can display them.
+            $formRoute = match ($request->route()?->getName()) {
+                'login.store' => 'login',
+                'register.store' => 'register',
+                default => null,
+            };
+
+            if ($formRoute !== null) {
+                $exception->redirectTo(route($formRoute));
+            }
+        });
     })->create();

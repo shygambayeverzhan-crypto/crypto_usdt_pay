@@ -2,8 +2,9 @@
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { store as registerStore } from '@/routes/register';
-import { Head, Link, useForm } from '@inertiajs/vue3';
 import { vueLang } from '@erag/lang-sync-inertia';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowRight } from 'lucide-vue-next';
 
 const form = useForm({
     name: '',
@@ -27,11 +28,13 @@ function submit() {
     >
         <Head :title="__('frontend.auth.register.page_title')" />
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6">
-            <div class="grid gap-6">
+        <form @submit.prevent="submit" class="auth-form flex flex-col gap-6">
+            <div class="auth-fields auth-fields-register grid gap-6">
                 <div class="grid gap-2">
                     <label for="name" class="label">
-                        <span class="label-text">{{ __('frontend.auth.register.name') }}</span>
+                        <span class="label-text">{{
+                            __('frontend.auth.register.name')
+                        }}</span>
                     </label>
                     <input
                         id="name"
@@ -41,16 +44,26 @@ function submit() {
                         tabindex="1"
                         autocomplete="name"
                         name="name"
-                        :placeholder="__('frontend.auth.register.name_placeholder')"
+                        :placeholder="
+                            __('frontend.auth.register.name_placeholder')
+                        "
                         v-model="form.name"
-                        class="input input-bordered w-full"
+                        class="input-bordered input w-full"
                     />
-                    <p v-if="form.errors.name" class="text-error text-sm">{{ form.errors.name }}</p>
+                    <p
+                        v-if="form.errors.name"
+                        role="alert"
+                        class="text-sm text-error"
+                    >
+                        {{ form.errors.name }}
+                    </p>
                 </div>
 
                 <div class="grid gap-2">
                     <label for="email" class="label">
-                        <span class="label-text">{{ __('frontend.auth.register.email') }}</span>
+                        <span class="label-text">{{
+                            __('frontend.auth.register.email')
+                        }}</span>
                     </label>
                     <input
                         id="email"
@@ -59,16 +72,26 @@ function submit() {
                         tabindex="2"
                         autocomplete="email"
                         name="email"
-                        :placeholder="__('frontend.auth.register.email_placeholder')"
+                        :placeholder="
+                            __('frontend.auth.register.email_placeholder')
+                        "
                         v-model="form.email"
-                        class="input input-bordered w-full"
+                        class="input-bordered input w-full"
                     />
-                    <p v-if="form.errors.email" class="text-error text-sm">{{ form.errors.email }}</p>
+                    <p
+                        v-if="form.errors.email"
+                        role="alert"
+                        class="text-sm text-error"
+                    >
+                        {{ form.errors.email }}
+                    </p>
                 </div>
 
                 <div class="grid gap-2">
                     <label for="password" class="label">
-                        <span class="label-text">{{ __('frontend.auth.register.password') }}</span>
+                        <span class="label-text">{{
+                            __('frontend.auth.register.password')
+                        }}</span>
                     </label>
                     <input
                         id="password"
@@ -77,16 +100,26 @@ function submit() {
                         tabindex="3"
                         autocomplete="new-password"
                         name="password"
-                        :placeholder="__('frontend.auth.register.password_placeholder')"
+                        :placeholder="
+                            __('frontend.auth.register.password_placeholder')
+                        "
                         v-model="form.password"
-                        class="input input-bordered w-full"
+                        class="input-bordered input w-full"
                     />
-                    <p v-if="form.errors.password" class="text-error text-sm">{{ form.errors.password }}</p>
+                    <p
+                        v-if="form.errors.password"
+                        role="alert"
+                        class="text-sm text-error"
+                    >
+                        {{ form.errors.password }}
+                    </p>
                 </div>
 
                 <div class="grid gap-2">
                     <label for="password_confirmation" class="label">
-                        <span class="label-text">{{ __('frontend.auth.register.password_confirmation') }}</span>
+                        <span class="label-text">{{
+                            __('frontend.auth.register.password_confirmation')
+                        }}</span>
                     </label>
                     <input
                         id="password_confirmation"
@@ -95,31 +128,55 @@ function submit() {
                         tabindex="4"
                         autocomplete="new-password"
                         name="password_confirmation"
-                        :placeholder="__('frontend.auth.register.password_confirm_placeholder')"
+                        :placeholder="
+                            __(
+                                'frontend.auth.register.password_confirm_placeholder',
+                            )
+                        "
                         v-model="form.password_confirmation"
-                        class="input input-bordered w-full"
+                        class="input-bordered input w-full"
                     />
-                    <p v-if="form.errors.password_confirmation" class="text-error text-sm">{{ form.errors.password_confirmation }}</p>
+                    <p
+                        v-if="form.errors.password_confirmation"
+                        role="alert"
+                        class="text-sm text-error"
+                    >
+                        {{ form.errors.password_confirmation }}
+                    </p>
                 </div>
 
                 <button
                     type="submit"
-                    class="btn btn-primary mt-2 w-full"
+                    class="auth-submit btn w-full btn-primary"
                     tabindex="5"
                     :disabled="form.processing"
                     data-test="register-user-button"
                 >
-                    <span v-if="form.processing" class="loading loading-spinner loading-sm mr-2" />
+                    <span
+                        v-if="form.processing"
+                        class="loading mr-2 loading-sm loading-spinner"
+                    />
                     {{ __('frontend.auth.register.submit') }}
+                    <ArrowRight
+                        v-if="!form.processing"
+                        :size="17"
+                        :stroke-width="1.7"
+                        aria-hidden="true"
+                    />
                 </button>
             </div>
 
-            <div class="text-center text-sm text-base-content/60">
-                {{ __('frontend.auth.register.have_account') }}
-                <Link :href="login().url" class="link link-hover" tabindex="6">{{ __('frontend.auth.register.login') }}</Link>
+            <div class="grid gap-4 text-center text-sm text-base-content/60">
+                <span class="auth-divider">{{
+                    __('frontend.auth.register.have_account')
+                }}</span>
+                <Link
+                    :href="login().url"
+                    class="auth-secondary btn w-full btn-outline"
+                    tabindex="6"
+                    >{{ __('frontend.auth.register.login') }}</Link
+                >
             </div>
         </form>
     </AuthBase>
 </template>
-
-

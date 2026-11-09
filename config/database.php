@@ -95,6 +95,11 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Bookworm ships libpq 15: named PDO prepares can abort transactions
+            // through PgBouncer. Unnamed queries retain server-side parameter binding.
+            'options' => extension_loaded('pdo_pgsql') ? [
+                PDO::PGSQL_ATTR_DISABLE_PREPARES => (bool) env('DB_DISABLE_PREPARES', env('VERCEL_RUNTIME', false)),
+            ] : [],
         ],
 
         'sqlsrv' => [

@@ -1,49 +1,320 @@
 @import 'tailwindcss';
-
 @source "../**/*.blade.php";
 @source "../**/*.js";
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 @source "../../storage/framework/views/*.php";
-
 @plugin "daisyui" {
-    themes: dark --default, light;
+    themes:
+        dark --default,
+        light;
+}
+@theme {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Тень сайдбара вправо: светлая тема — чуть плотнее, тёмная — мягче */
-.sidebar-elevated {
-    box-shadow: 2px 0 10px -3px rgb(0 0 0 / 0.08);
+:root,
+[data-theme='dark'] {
+    color-scheme: dark;
+    --color-base-100: #142138;
+    --color-base-200: #101b30;
+    --color-base-300: #263650;
+    --color-base-content: #edf4ff;
+    --color-primary: #a4d8ff;
+    --color-primary-content: #08233b;
+    --color-secondary: #c1bbff;
+    --color-accent: #8ae1db;
+    --color-success: #87e5c5;
+    --color-info: #a4d8ff;
+    --color-warning: #f5cf8d;
+    --color-error: #ffa7b5;
+    --radius-box: 1.75rem;
+    --radius-field: 1rem;
+    --radius-selector: 0.75rem;
+    --glass-canvas: #080f1e;
+    --glass-panel: rgba(27, 43, 67, 0.62);
+    --glass-surface: rgba(172, 206, 255, 0.065);
+    --glass-edge: rgba(210, 231, 255, 0.16);
+    --glass-highlight: rgba(240, 248, 255, 0.22);
+    --glass-muted: #a8b8d0;
+    --glass-shadow: 0 20px 65px -30px rgba(0, 0, 0, 0.7);
+    --glass-input: rgba(4, 15, 34, 0.4);
+    --glass-ambient:
+        radial-gradient(
+            ellipse at 12% 8%,
+            rgba(62, 116, 177, 0.3),
+            transparent 48%
+        ),
+        radial-gradient(
+            ellipse at 86% 45%,
+            rgba(93, 87, 162, 0.22),
+            transparent 50%
+        ),
+        radial-gradient(
+            ellipse at 38% 95%,
+            rgba(40, 120, 137, 0.16),
+            transparent 50%
+        );
 }
-[data-theme='dark'] .sidebar-elevated {
-    box-shadow: 2px 0 10px -3px rgb(0 0 0 / 0.08);
+[data-theme='light'] {
+    color-scheme: light;
+    --color-base-100: #f8fbff;
+    --color-base-200: #e8eff8;
+    --color-base-300: #d0dced;
+    --color-base-content: #1c304c;
+    --color-primary: #225a99;
+    --color-primary-content: #ffffff;
+    --color-secondary: #6456a6;
+    --color-accent: #177e86;
+    --color-success: #167258;
+    --color-info: #225a99;
+    --color-warning: #8b5717;
+    --color-error: #b22d4f;
+    --glass-canvas: #e8eff8;
+    --glass-panel: rgba(255, 255, 255, 0.61);
+    --glass-surface: rgba(255, 255, 255, 0.42);
+    --glass-edge: rgba(120, 150, 185, 0.26);
+    --glass-highlight: rgba(255, 255, 255, 0.95);
+    --glass-muted: #506684;
+    --glass-shadow: 0 20px 65px -30px rgba(41, 74, 120, 0.22);
+    --glass-input: rgba(248, 252, 255, 0.68);
+    --glass-ambient:
+        radial-gradient(
+            ellipse at 12% 8%,
+            rgba(135, 194, 233, 0.46),
+            transparent 48%
+        ),
+        radial-gradient(
+            ellipse at 86% 45%,
+            rgba(184, 169, 225, 0.34),
+            transparent 50%
+        ),
+        radial-gradient(
+            ellipse at 38% 95%,
+            rgba(138, 204, 202, 0.28),
+            transparent 50%
+        );
 }
-[data-theme='light'] .sidebar-elevated {
-    box-shadow: 3px 0 14px -3px rgb(0 0 0 / 0.13);
+html {
+    background: var(--glass-canvas);
 }
-
-/*
- * DaisyUI: :where(.drawer-side) всегда даёт overflow-x: hidden, при lg:drawer-open — overflow-y: auto,
- * из‑за этого box-shadow у aside полностью обрезается. На десктопе снимаем overflow с колонки
- * и переносим вертикальный скролл на сам aside (h-dvh overflow-y-auto в AppLayout).
- */
-@media (width >= 1024px) {
-    .drawer.lg\:drawer-open > .drawer-side {
-        overflow: visible;
+body {
+    min-height: 100dvh;
+    background: var(--glass-ambient), var(--glass-canvas);
+    background-attachment: fixed;
+    color: var(--color-base-content);
+    font-family: var(--font-sans);
+    letter-spacing: -0.015em;
+    -webkit-font-smoothing: antialiased;
+}
+.glass-panel,
+.glass-surface {
+    border: 1px solid var(--glass-edge);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 55%),
+        var(--glass-panel);
+    border-radius: 28px;
+    box-shadow:
+        inset 0 1px 0 var(--glass-highlight),
+        var(--glass-shadow);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
+    backdrop-filter: blur(24px) saturate(145%);
+}
+.glass-surface {
+    background: var(--glass-surface);
+    border-radius: 20px;
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+.glass-muted {
+    color: var(--glass-muted);
+}
+.glass-kicker {
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--glass-muted);
+}
+.glass-brand-mark {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--glass-highlight);
+    border-radius: 14px;
+    background: linear-gradient(
+        145deg,
+        rgba(192, 231, 255, 0.26),
+        rgba(94, 164, 218, 0.08)
+    );
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.55),
+        0 6px 20px rgba(35, 128, 189, 0.13);
+    color: var(--color-primary);
+    font-size: 22px;
+    font-weight: 650;
+}
+.btn {
+    border-radius: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease;
+}
+.btn-primary {
+    border: 1px solid color-mix(in srgb, var(--color-primary), white 28%);
+    background: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--color-primary), white 20%),
+        var(--color-primary)
+    );
+    color: var(--color-primary-content);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 6px 22px -9px
+            color-mix(in srgb, var(--color-primary), transparent 48%);
+}
+.btn-outline,
+.btn-ghost {
+    border-color: var(--glass-edge);
+    background-color: var(--glass-surface);
+}
+@media (hover: hover) {
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+    .btn-outline:hover,
+    .btn-ghost:hover {
+        background-color: color-mix(
+            in srgb,
+            var(--color-primary),
+            transparent 88%
+        );
+        color: var(--color-base-content);
     }
 }
-
-/* Базовый канвас под всем приложением: тёмный, чтобы при прокрутке/оверскролле не было белых «прыжков» */
-@layer base {
-    html {
-        background-color: #030712;
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+:is(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 4px;
+}
+.input,
+.select,
+.textarea {
+    background: var(--glass-input);
+    border: 1px solid var(--glass-edge);
+    color: var(--color-base-content);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+    border-radius: 14px;
+    font-size: 16px;
+}
+.input,
+.select {
+    min-height: 48px;
+}
+.input::placeholder,
+.textarea::placeholder {
+    color: var(--glass-muted);
+    opacity: 0.72;
+}
+.input:focus,
+.select:focus,
+.textarea:focus {
+    border-color: var(--color-primary);
+}
+.label {
+    color: var(--glass-muted);
+}
+.checkbox {
+    border-color: var(--glass-edge);
+}
+.dropdown-content,
+.modal-box {
+    border: 1px solid var(--glass-edge);
+    background: var(--color-base-100);
+    box-shadow: var(--glass-shadow);
+}
+.dropdown-content {
+    z-index: 40;
+}
+/* Shared surfaces keep merchant, invoice and settings pages consistent. */
+.glass-app .card,
+.glass-app .stats {
+    border: 1px solid var(--glass-edge);
+    background: var(--glass-panel);
+    box-shadow:
+        inset 0 1px 0 var(--glass-highlight),
+        var(--glass-shadow);
+    border-radius: 24px;
+}
+.glass-app .table :where(th, td) {
+    border-color: var(--glass-edge);
+}
+.glass-app .table thead {
+    color: var(--glass-muted);
+}
+.glass-app .table-zebra tbody tr:nth-child(even) {
+    background: var(--glass-surface);
+}
+@supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+    .glass-panel,
+    .glass-surface {
+        background: var(--color-base-100);
     }
-
+}
+@media (prefers-reduced-transparency: reduce) {
+    .glass-panel,
+    .glass-surface {
+        background: var(--color-base-100);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+@media (max-width: 639px) {
+    .glass-panel {
+        border-radius: 24px;
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+    }
     body {
-        background-color: #030712;
-        min-height: 100%;
+        background-attachment: scroll;
     }
+}
 
-    /* Только лендинг Welcome: без горизонтального overflow */
-    html.page-welcome {
-        overflow-x: hidden;
+/* Keep accessibility preferences stronger than responsive decoration. */
+.btn:disabled,
+.btn-disabled,
+.btn[aria-disabled='true'] {
+    opacity: 0.45;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+    .glass-panel,
+    .glass-surface {
+        background: var(--color-base-100);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
     }
 }

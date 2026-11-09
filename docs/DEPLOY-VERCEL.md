@@ -1,5 +1,25 @@
 # Vercel: Laravel + PostgreSQL
 
+## Проверка готовности панели
+
+`GET /up` проверяет только запуск PHP. `GET /ready` проверяет ключ приложения,
+подключение к БД и отсутствие неприменённых миграций. Он возвращает только
+`{"status":"ready"}` (200) либо `{"status":"unavailable"}` (503), без реквизитов
+и текста ошибок БД. Ни один из этих запросов не выполняет миграции или платежи.
+Для мониторинга панели используйте `/ready`. Это не проверка готовности mainnet,
+Telegram, фонового расписания, существования владельца или доставки уведомлений.
+
+Для диагностики с доверенной машины выполните `php artisan deployment:check`.
+Команда только читает состояние, печатает безопасные коды ошибок и завершается
+с ненулевым кодом, если нужны настройки, доступ к БД или миграции. Не отключайте
+`EnsureDeploymentConfigured`, чтобы спрятать 503: подключите PostgreSQL в нужное
+окружение, примените миграции и разверните новую версию. APP_KEY менять нельзя.
+Если APP_URL не задан, используется HTTPS-адрес текущего deployment из VERCEL_URL.
+
+Для `crypto-usdt-pay-if8i` используйте отдельную Preview-базу; не копируйте
+реквизиты Railway. `PAYMENTS_ENABLED=false`, `PAYMENT_CALLBACKS_ENABLED=false`
+и `ALLOW_REGISTRATION=false` должны оставаться выключенными до отдельной приёмки.
+
 ## Что изменилось
 
 Основной проект: `YFPRD / crypto-usdt-pay`. Репозиторий связан также с `crypto-usdt-pay-if8i`: это второй независимый deployment, не второй компонент платёжки. Не подключайте оба проекта к рабочей БД и боту одновременно. Для preview используйте отдельную тестовую БД, отдельного бота и Nile.
@@ -55,6 +75,12 @@ docker run --rm --env-file .env.vercel.private payment-vercel php artisan migrat
 ```
 
 Используйте прямое соединение провайдера для миграций, если его pooler ограничивает DDL. После создания владельца удалите ADMIN_PASSWORD из Vercel и файла. APP_KEY сохраняйте вместе с защищёнными backup. Публичного HTTP endpoint для установки или миграций нет.
+
+## Neon: вход и пул соединений
+
+Для Vercel PostgreSQL-драйвер по умолчанию выполняет запросы с параметрами без именованных prepared statements (`DB_DISABLE_PREPARES=true` при `VERCEL_RUNTIME=true`). Параметры продолжает обрабатывать сервер PostgreSQL. Это нужно для совместимости libpq 15 из Bookworm с пулом PgBouncer: без настройки обновление счётчика попыток входа может завершиться `SQLSTATE[25P02]` и HTTP 500. Для другого хостинга с пулом включите `DB_DISABLE_PREPARES=true` явно. Не заменяйте общий кеш на локальный и не отключайте ограничение попыток входа.
+
+Основание: [PgBouncer FAQ](https://www.pgbouncer.org/faq.html#how-to-use-prepared-statements-with-transaction-pooling), [PHP PDO PostgreSQL](https://www.php.net/manual/en/class.pdo-pgsql.php).
 
 ## Фоновая работа
 

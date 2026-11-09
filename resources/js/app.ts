@@ -4,14 +4,17 @@ import '../css/app.css';
 /// <reference path="./types/globals.d.ts" />
 
 import { createInertiaApp } from '@inertiajs/vue3';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import type { DefineComponent } from 'vue';
-import { createApp, h } from 'vue';
 import axios from 'axios';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { createApp, h } from 'vue';
 // Для корректной работы CSRF в axios
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-const appName = (import.meta as any).env?.VITE_APP_NAME || 'Laravel';
+const configuredName = (import.meta as any).env?.VITE_APP_NAME;
+const appName =
+    configuredName && configuredName !== 'Laravel'
+        ? configuredName
+        : 'USDT PAY';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -25,6 +28,6 @@ createInertiaApp({
         app.use(plugin).mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: '#a4d8ff',
     },
 });
