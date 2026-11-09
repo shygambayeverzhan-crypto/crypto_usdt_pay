@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
+    $this->withoutVite();
+
     config([
         'cache.default' => 'database',
         'session.driver' => 'database',
